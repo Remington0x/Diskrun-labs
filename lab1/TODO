@@ -1,0 +1,2 @@
+Make dynamic allocation of memory w/o std::string
+sizeof(struct) = sum of components

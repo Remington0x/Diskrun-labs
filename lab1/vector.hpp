@@ -10,6 +10,13 @@ struct TNode {
     struct TNode* Next;
 };
 
+struct TNode1 {
+    int Position;
+    int Key;
+    char Data[32];
+    struct TNode1* Next;
+};
+
 int VectorPushBack(struct TNode* root, int key, std::string data) {
     while (root->Next != NULL) {
         root = root->Next;
@@ -28,7 +35,7 @@ int VectorPushBack(struct TNode* root, int key, std::string data) {
     return 0;
 }
 
-int
+#endif
 
 // class TVector {
 // private:
