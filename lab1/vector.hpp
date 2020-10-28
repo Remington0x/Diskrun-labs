@@ -1,6 +1,8 @@
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
+#include <stdio.h>
+#include <cstdlib>
 
 // struct TNode {
 //     int Position;

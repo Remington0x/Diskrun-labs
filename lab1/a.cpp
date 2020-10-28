@@ -103,7 +103,7 @@ int main() {
 
 	ptrB = vectorB;
 	while (ptrB != NULL) {
-		printf("%d\t%s\n", ptrB->Key, ptrB->Data);
+		printf("%06d\t%s\n", ptrB->Key, ptrB->Data);
 		ptrB = ptrB->Next;
 	}
 
