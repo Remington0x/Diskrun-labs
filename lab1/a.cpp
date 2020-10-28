@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 #include "vector.hpp"
 
 int main() {
@@ -9,26 +8,29 @@ int main() {
     }
 
     int key;
-    std::string string;
+    char string[2048];
 
     scanf("%d\t%s", &key, &string);
     b[key] += 1;
-	std::cout << "scanf done\n";
-    struct TNode* vectorA = (struct TNode*)malloc(sizeof(struct TNode));
-	std::cout << "malloc done\n";
+	//std::cout << "scanf done\n";
+    struct TNode1* vectorA = (struct TNode1*)malloc(sizeof(struct TNode1) + stringLength(string) * sizeof(char));
+	//std::cout << "malloc done\n";
     vectorA->Position = 0;
     vectorA->Key = key;
-	std::cout << "position/key done\n";
-    vectorA->Data = string;
-	std::cout << "string done\n";
+	//std::cout << "position/key done\n";
+
+    vectorA->Data = (char*)malloc(stringLength(string) * sizeof(char));
+	stringAssignment(string, vectorA->Data);
+	//std::cout << "string done\n";
+
     vectorA->Next = NULL;
-	std::cout << "init done\n";
+	//std::cout << "init done\n";
 
 	while (scanf("%d\t%s", &key, &string) > 0) {
         b[key] += 1;
-		std::cout << "scanf done\n";
+		//std::cout << "scanf done\n";
         VectorPushBack(vectorA, key, string);
-		std::cout << "push back done\n";
+		//std::cout << "push back done\n";
     }
 
     int buff = b[0];
@@ -41,10 +43,10 @@ int main() {
     }
 
     //now the main sorting appears
-	struct TNode* ptrA = vectorA;
-	struct TNode* vectorB = NULL;
-	struct TNode* ptrB = vectorB;
-	struct TNode* buffptr = NULL;
+	struct TNode1* ptrA = vectorA;
+	struct TNode1* vectorB = NULL;
+	struct TNode1* ptrB = vectorB;
+	struct TNode1* buffptr = NULL;
 	int pos;
 
 	while (ptrA != NULL) {	//took vectorA[i]
@@ -58,25 +60,28 @@ int main() {
 		ptrB = vectorB;
 
 		if (vectorB == NULL) {	//1.
-			vectorB = (struct TNode*)malloc(sizeof(struct TNode));
+			vectorB = (struct TNode1*)malloc(sizeof(struct TNode1) + sizeof(char) * stringLength(ptrA->Data));
 			vectorB->Position = pos;
 		    vectorB->Key = ptrA->Key;
-		    vectorB->Data = ptrA->Data;
+			vectorB->Data = (char*)malloc(sizeof(char) * stringLength(ptrA->Data));
+		    stringAssignment(ptrA->Data, vectorB->Data);
 		    vectorB->Next = NULL;
 		} else if (pos < ptrB->Position) {	//2.
-			vectorB = (struct TNode*)malloc(sizeof(struct TNode));
+			vectorB = (struct TNode1*)malloc(sizeof(struct TNode1) + sizeof(char) * stringLength(ptrA->Data));
 			vectorB->Position = pos;
 			vectorB->Key = ptrA->Key;
-			vectorB->Data = ptrA->Data;
+			vectorB->Data = (char*)malloc(sizeof(char) * stringLength(ptrA->Data));
+			stringAssignment(ptrA->Data, vectorB->Data);
 			vectorB->Next = ptrB;
 		} else {
 			while (ptrB->Next != NULL) {	//3.
 				if (ptrB->Next->Position > pos) {
 					buffptr = ptrB->Next;
-					ptrB->Next = (struct TNode*)malloc(sizeof(struct TNode));
+					ptrB->Next = (struct TNode1*)malloc(sizeof(struct TNode1) + sizeof(char) * stringLength(ptrA->Data));
 					ptrB->Next->Position = pos;
 				    ptrB->Next->Key = ptrA->Key;
-				    ptrB->Next->Data = ptrA->Data;
+					ptrB->Next->Data = (char*)malloc(sizeof(char) * stringLength(ptrA->Data));
+				    stringAssignment(ptrA->Data, ptrB->Next->Data);
 				    ptrB->Next->Next = buffptr;
 					break;
 				}
@@ -84,10 +89,11 @@ int main() {
 			}
 
 			if (ptrB->Next == NULL) {	//4.
-				ptrB->Next = (struct TNode*)malloc(sizeof(struct TNode));
+				ptrB->Next = (struct TNode1*)malloc(sizeof(struct TNode1) + sizeof(char) * stringLength(ptrA->Data));
 				ptrB->Next->Position = pos;
 				ptrB->Next->Key = ptrA->Key;
-				ptrB->Next->Data = ptrA->Data;
+				ptrB->Next->Data = (char*)malloc(sizeof(char) * stringLength(ptrA->Data));
+				stringAssignment(ptrA->Data, ptrB->Next->Data);
 				ptrB->Next->Next = NULL;
 			}
 		}
@@ -98,7 +104,11 @@ int main() {
 	ptrB = vectorB;
 	while (ptrB != NULL) {
 		printf("%d\t%s\n", ptrB->Key, ptrB->Data);
+		ptrB = ptrB->Next;
 	}
+
+	vectorClear(vectorA);
+	vectorClear(vectorB);
 
 
 }
