@@ -46,7 +46,79 @@ private:
     }
 
     void nodeSplit(TNode* node) {
+        if (keyCount < (2 * t - 1)) {
+            std::cout << "ERROR: nodeSplit(): node is not full\n";
+            return;
+        }
+        //if node is not root
 
+        TNode* newNode = (TNode*)malloc(sizeof(TNode));
+        newNode->isLeaf = node->isLeaf;
+
+        newNode->keyCount = t - 1;
+        newNode->keys = (TString*)malloc(sizeof(TString) * newNode->keyCount);
+        newNode->data = (unsigned long long*)malloc(sizeof(unsigned long long) * newNode->keyCount);
+        int i;
+        if (node->isLeaf) {
+            for (i = t; i < 2 * t - 1; ++i) {
+                newNode->keys[i - t] = node->keys[i];
+                newNode->data[i - t] = node->data[i];
+            }
+        } else {
+            newNode->children = (TNode**)malloc(sizeof(TNode*) * (newNode->keyCount + 1));
+            for (i = t; i < 2 * t - 1; ++i) {
+                newNode->keys[i - t] = node->keys[i];
+                newNode->data[i - t] = node->data[i];
+                newNode->children[i - t] = node->children[i];
+            }
+            newNode->children[i - t] = node->children[i];
+        }
+
+        if (node != root) {
+            newNode->parent = node->parent;
+            //parent node manipulations
+            node->parent->keyCount += 1;
+            node->parent->keys = (TString*)realloc(node->parent->keys, sizeof(TString) * node->parent->keyCount);
+            node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
+            node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
+            i = 0;
+            while (node->parent->keys[i] < node->keys[t - 1]) {
+                ++i;
+            }
+            insertInArray(node->parent->keys, keyCount, node->keys[t - 1], i);
+            insertInArray(node->parent->data, keyCount, node->data[t - 1], i);
+            insertInArray(node->parent->children, keyCount + 1, newNode, i + 1);
+
+        } else {    //if node == root
+            TNode* newRoot = (TNode*)malloc(sizeof(TNode));
+            node->parent = newRoot;
+            newNode->parent = newRoot;
+
+            newRoot->isLeaf = false;
+            newRoot->keyCount = 1;
+            newRoot->keys = (TString*)malloc(node->parent->keys, sizeof(TString) * newRoot->keyCount);
+            newRoot->keys[0] = node->keys[t - 1];
+            newRoot->data = (unsigned long long*)malloc(node->parent->data, sizeof(unsigned long long) * newRoot->keyCount);
+            newRoot->data[0] = node->data[t - 1];
+            newRoot->children = (TNode**)malloc(newRoot->children, sizeof(TNode*) * (newRoot->keyCount + 1));
+            newRoot->children[0] = node;
+            newRoot->children[1] = newNode;
+            root = newRoot;
+        }
+
+        //shrink node
+        node->keyCount = t - 1;
+        node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
+        node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
+        node->children = (TNode**)realloc(node->children, sizeof(TNode*) * (node->keyCount + 1));
+
+    }
+    template <class T>
+    void insertInArray(T* array, int size, T instance, int pos) { //pos 0..i-1
+        for (int i = size - 2; i >= pos; --i) {
+            array[i + 1] = array[i];
+        }
+        array[pos] = instance;
     }
 
     void recInsert(TNode* node, TString& key, unsigned long long& data) {
