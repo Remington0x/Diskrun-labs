@@ -60,12 +60,10 @@ int main() {
     for (int i = 999999; i > 0; --i) {
         keys[i] = keys[i - 1];
     }
-    // printf("\n\n");
 
     // for (int i = 0; i < 100; ++i) {
     //     printf("%d ", keys[i]);
     // }
-    // printf("\n\n");
 
     keys[0] = 0;
 
