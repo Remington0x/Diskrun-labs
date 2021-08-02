@@ -1,8 +1,5 @@
 #include <iostream>
-
-struct TString {
-    char string[256];
-};
+#include "tstring.hpp"
 
 class TBTree {
 private:
@@ -26,7 +23,7 @@ private:
 
     unsigned long long recSearch(TNode* node, TString& key) {
         int i = 0;
-        for (i = 0; i < keyCount; ++i) {
+        for (i = 0; i < node->keyCount; ++i) {
             if (node->keys[i] == key) {
                 return (node->data[i]);
             } else
@@ -42,11 +39,21 @@ private:
     }
 
     void nodeAddKey(TNode* node, TString& key, unsigned long long& data) {
+        int i = 0;
+        while (i < node->keyCount && node->keys[i] < key) {
+            ++i;
+        }
 
+        node->keyCount += 1;
+        node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
+        node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
+
+        insertInArray(node->keys, node->keyCount, key, i);
+        insertInArray(node->data, node->keyCount, data, i);
     }
 
     void nodeSplit(TNode* node) {
-        if (keyCount < (2 * t - 1)) {
+        if (node->keyCount < (2 * t - 1)) {
             std::cout << "ERROR: nodeSplit(): node is not full\n";
             return;
         }
@@ -82,12 +89,12 @@ private:
             node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
             node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
             i = 0;
-            while (node->parent->keys[i] < node->keys[t - 1]) {
+            while ((node->parent->keys[i] < node->keys[t - 1]) && (i < node->parent->keyCount - 1)) {
                 ++i;
             }
-            insertInArray(node->parent->keys, keyCount, node->keys[t - 1], i);
-            insertInArray(node->parent->data, keyCount, node->data[t - 1], i);
-            insertInArray(node->parent->children, keyCount + 1, newNode, i + 1);
+            insertInArray(node->parent->keys, node->parent->keyCount, node->keys[t - 1], i);
+            insertInArray(node->parent->data, node->parent->keyCount, node->data[t - 1], i);
+            insertInArray(node->parent->children, node->parent->keyCount + 1, newNode, i + 1);
 
         } else {    //if node == root
             TNode* newRoot = (TNode*)malloc(sizeof(TNode));
@@ -96,11 +103,11 @@ private:
 
             newRoot->isLeaf = false;
             newRoot->keyCount = 1;
-            newRoot->keys = (TString*)malloc(node->parent->keys, sizeof(TString) * newRoot->keyCount);
+            newRoot->keys = (TString*)malloc(sizeof(TString) * newRoot->keyCount);
             newRoot->keys[0] = node->keys[t - 1];
-            newRoot->data = (unsigned long long*)malloc(node->parent->data, sizeof(unsigned long long) * newRoot->keyCount);
+            newRoot->data = (unsigned long long*)malloc(sizeof(unsigned long long) * newRoot->keyCount);
             newRoot->data[0] = node->data[t - 1];
-            newRoot->children = (TNode**)malloc(newRoot->children, sizeof(TNode*) * (newRoot->keyCount + 1));
+            newRoot->children = (TNode**)malloc(sizeof(TNode*) * (newRoot->keyCount + 1));
             newRoot->children[0] = node;
             newRoot->children[1] = newNode;
             root = newRoot;
@@ -113,6 +120,7 @@ private:
         node->children = (TNode**)realloc(node->children, sizeof(TNode*) * (node->keyCount + 1));
 
     }
+
     template <class T>
     void insertInArray(T* array, int size, T instance, int pos) { //pos 0..i-1
         for (int i = size - 2; i >= pos; --i) {
@@ -124,7 +132,7 @@ private:
     void recInsert(TNode* node, TString& key, unsigned long long& data) {
         int i = 0;
         if (!node->isLeaf) {
-            for (i = 0; i < keyCount; ++i) {
+            for (i = 0; i < node->keyCount; ++i) {
                 if (node->keys[i] == key) {
                     doesAlreadyExist = true;
                     return;
@@ -139,7 +147,7 @@ private:
                 return;
             }
         } else {    //seems like we have to insert into this leaf
-            if (keyCount < (2 * t - 1)) { //leaf is not full
+            if (node->keyCount < (2 * t - 1)) { //leaf is not full
                 nodeAddKey(node, key, data);
             } else {    //time to split
                 nodeSplit(node);    //split
@@ -148,101 +156,108 @@ private:
         }
     }
 
-public:
-    TBTree() {}
-    ~TBTree() {}
+    void recFreeTree(TNode* node) {
+        if (!node->isLeaf) {
+            for (int i = 0; i <= node->keyCount; ++i) {
+                recFreeTree(node->children[i]);
+            }
+            free(node->children);
+        }
 
-    unsigned long long search(TString& key) {
+        free(node->keys);
+        free(node->data);
+        free(node);
+    }
+
+    void recPrintTree(TNode* node, int tab) {
+        if (node->children != nullptr) {
+            for (int i = 0; i <= node->keyCount; ++i) {
+                recPrintTree(node->children[i], tab + 1);
+            }
+        }
+        for (int i = 0; i < tab; ++i) {
+            std::cout << '/';
+        }
+        for (int i = 0; i < node->keyCount; ++i) {
+            std::cout << node->keys[i] << ' ';
+        }
+        std::cout << std::endl;
+    }
+
+public:
+    TBTree(int treeMeasure) {
+        root = (TNode*)malloc(sizeof(TNode));
+        root->keyCount = 0;
+        root->isLeaf = true;
+        t = treeMeasure;
+    }
+
+    ~TBTree() {
+        recFreeTree(root);
+    }
+
+    void search(TString& key) {
         isSuchWord = true;
         unsigned long long result = recSearch(root, key);
         if (isSuchWord) {
-            return result;
+            std::cout << "OK: " << result << std::endl;
         } else {
             std::cout << "NoSuchWord\n";
         }
+        return;
     }
 
     //returns true if insertion successful, false if word already exists
     bool insert(TString& key, unsigned long long& data) {
         doesAlreadyExist = false;
         recInsert(root, key, data);
+        return !doesAlreadyExist;
+    }
+
+    void printTree() {
+        std::cout << root->keyCount << ' ' << root->keys[0] << ' ' << root->data[0] << std::endl;
+        recPrintTree(root, 0);
     }
 
 
 };
 
-//works with lower-cased chars
-bool operator<(TString a, TString b) {
-    int i = 0;
-    while (a.string[i] != '\0' && b.string[i] != '\0') {
-        if (a.string[i] < b.string[i]) {
-            return true;
-        } else
-        if (a.string[i] > b.string[i]) {
-            return false;
-        }
-        ++i;
-    }
-    //at this point one or two strings have ended
-    if (a.string[i] == '\0' && b.string[i] != '\0') {
-        return true;
-    } else {
-        return false;
-    }
-}
 
-bool operator>(TString a, TString b) {
-    int i = 0;
-    while (a.string[i] != '\0' && b.string[i] != '\0') {
-        if (a.string[i] > b.string[i]) {
-            return true;
-        } else
-        if (a.string[i] < b.string[i]) {
-            return false;
-        }
-        ++i;
-    }
-    //at this point one or two strings have ended
-    if (a.string[i] != '\0' && b.string[i] == '\0') {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool operator==(TString a, TString b) {
-    int i = 0;
-    while (a.string[i] != '\0' && b.string[i] != '\0') {
-        if (a.string[i] != b.string[i]) {
-            return false;
-        }
-        ++i;
-    }
-    //at this point one or two strings have ended
-    if (a.string[i] == '\0' && b.string[i] == '\0') {
-        return true;
-    } else {
-        return false;
-    }
-}
 
 int main() {
-    std::cout << "Enter a and b\n";
-    TString a, b;
-    std::cin >> a.string >> b.string;
-    std::cout << "a < b = " << (a < b) << std::endl;
-    std::cout << "a > b = " << (a > b) << std::endl;
-    std::cout << "a == b = " << (a == b) << std::endl;
+    // std::cout << "Enter a and b\n";
+    // TString a, b;
+    // std::cin >> a.string >> b.string;
+    // std::cout << "a < b = " << (a < b) << std::endl;
+    // std::cout << "a > b = " << (a > b) << std::endl;
+    // std::cout << "a == b = " << (a == b) << std::endl;
+    // std::cout << "a = b" << std::endl;
+    // a = b;
+    // std::cout << a << std::endl;
 
-
-
-
-
-
-
-
-
-
+    bool flag = true;
+    TBTree tree(2);
+    char buff;
+    TString key;
+    unsigned long long data;
+    while (flag) {
+        std::cin >> buff;
+        if (buff == 'a') {
+            std::cin >> key.string >> data;
+            tree.insert(key, data);
+        } else
+        if (buff == 'p') {
+            tree.printTree();
+            std::cout << std::endl;
+        } else
+        if (buff == 's') {
+            std::cin >> key.string;
+            tree.search(key);
+        } else
+        if (buff == 'x') {
+            flag = false;
+        }
+    }
 
     return 0;
 }
