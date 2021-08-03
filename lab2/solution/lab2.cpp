@@ -1,6 +1,8 @@
 #include <iostream>
 #include "tstring.hpp"
 
+const unsigned long long FILE_KEY = 4123978234870187237;
+
 class TBTree {
 private:
     struct TNode {
@@ -158,6 +160,12 @@ private:
                 return;
             }
         } else {    //seems like we have to insert into this leaf
+            for (int i = 0; i < node->keyCount; ++i) {
+                if (node->keys[i] == key) {
+                    doesAlreadyExist = true;
+                    return;
+                }
+            }
             if (node->keyCount < (2 * t - 1)) { //leaf is not full
                 nodeAddKey(node, key, data);
             } else {    //time to split
@@ -199,15 +207,73 @@ private:
         std::cout << std::endl;
     }
 
+    void recSave(TNode* node, FILE* out) {
+        fwrite(&(node->isLeaf), sizeof(bool), 1, out);
+        fwrite(&(node->keyCount), sizeof(int), 1, out);
+        fwrite(node->keys, sizeof(TString), node->keyCount, out);
+        fwrite(node->data, sizeof(unsigned long long), node->keyCount, out);
+        if (!node->isLeaf) {
+            for (int i = 0; i <= node->keyCount; ++i) {
+                recSave(node->children[i], out);
+            }
+        }
+        return;
+    }
+
+    bool loadNode(TNode* node, TNode* parent, FILE* in) {
+        // std::cout << "loadNode in work...\n";
+        fread(&(node->isLeaf), sizeof(bool), 1, in);
+        if (ferror(in)) {
+            return false;
+        }
+        // std::cout << "isLeaf = " << node->isLeaf << std::endl;
+                        // return false;
+        fread(&(node->keyCount), sizeof(int), 1, in);
+        if (ferror(in)) {
+            return false;
+        }
+        // std::cout << "keyCount = " << node->keyCount << std::endl;
+        node->keys = (TString*)malloc(sizeof(TString) * node->keyCount);
+        fread(node->keys, sizeof(TString), node->keyCount, in);
+        if (ferror(in)) {
+            return false;
+        }
+        node->data = (unsigned long long*)malloc(sizeof(unsigned long long) * node->keyCount);
+        fread(node->data, sizeof(unsigned long long), node->keyCount, in);
+        if (ferror(in)) {
+            return false;
+        }
+        node->parent = parent;
+        if (!node->isLeaf) {
+            node->children = (TNode**)malloc(sizeof(TNode*) * (node->keyCount + 1));
+            for (int i = 0; i <= node->keyCount; ++i) {
+                node->children[i] = (TNode*)malloc(sizeof(TNode));
+                if (!(loadNode(node->children[i], node, in))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 public:
-    TBTree(int treeMeasure) {
+    void init(int treeMeasure) {
         root = (TNode*)malloc(sizeof(TNode));
         root->keyCount = 0;
         root->isLeaf = true;
         root->children = nullptr;
         root->data = nullptr;
         root->keys = nullptr;
+        root->parent = nullptr;
         t = treeMeasure;
+    }
+
+    TBTree() {
+        init(0);
+    }
+
+    TBTree(int treeMeasure) {
+        init(treeMeasure);
     }
 
     ~TBTree() {
@@ -237,6 +303,38 @@ public:
         recPrintTree(root, 0);
     }
 
+    void save(FILE* out) {
+        fwrite(&FILE_KEY, sizeof(unsigned long long), 1, out);
+        fwrite(&t, sizeof(int), 1, out);    //save t
+        recSave(root, out);     //recSave(root)
+    }
+
+    bool load(FILE* in) {
+        //check if file is corrupted
+        unsigned long long buff;
+        fread(&buff, sizeof(unsigned long long), 1, in);
+        if (ferror(in) != 0) {
+            // std::cout << "ferror\n";
+            return false;
+        }
+        if (buff != FILE_KEY) {
+            // std::cout << "buff != FILE_KEY\n";
+            // std::cout << "buff = " << buff << ", FILE_KEY = " << FILE_KEY << std::endl;
+            return false;
+        }
+        fread(&t, sizeof(int), 1, in);
+        if (ferror(in)) {
+            return false;
+        }
+        recFreeTree(root);
+        init(t);
+        return loadNode(root, nullptr, in);
+    }
+
+    int getMeasure() {
+        return t;
+    }
+
 
 };
 
@@ -257,24 +355,59 @@ int main() {
     // std::cout << "sizeof unsigned long long = " << sizeof(unsigned long long) << std::endl;
 
     //bool flag = true;
-    TBTree tree(2);
+    TBTree* tree = new TBTree(2);
+    TBTree* buffTree = new TBTree(0);
     char buff[256];
     TString key;
     unsigned long long data;
     while (std::cin >> buff) {
         if (buff[0] == '+') {
             std::cin >> key.string >> data;
-            tree.insert(key, data);
+            std::cout << (tree->insert(key, data) ? "OK\n" : "Exist\n");
         } else
         if (buff[0] == '-') {
 
         } else
         if (buff[0] == '!') {
-
+            std::cin >> buff;
+            if (stringCompare(buff, "Save")) {
+                std::cin >> buff;
+                FILE* out = fopen(buff, "wb");
+                if (out == nullptr) {
+                    std::cout << "ERROR: Error opening file\n";
+                } else {
+                    std::cout << "OK\n";
+                }
+                tree->save(out);
+                fclose(out);
+            } else
+            if (stringCompare(buff, "Load")) {
+                std::cin >> buff;
+                FILE* in = fopen(buff, "rb");
+                if (in == nullptr) {
+                    std::cout << "ERROR: Error opening file\n";
+                } else {
+                    if (buffTree->load(in)) {
+                        std::cout << "OK\n";
+                        tree = buffTree;
+                    } else {
+                        std::cout << "ERROR: File is corrupted or something\n";
+                    }
+                    fclose(in);
+                }
+            } else {
+                std::cout << "ERROR: Unknown command\n";
+            }
         } else {
             stringAssignment(key.string, buff);
-            tree.search(key);
+            tree->search(key);
         }
+    }
+    if (tree != buffTree) {
+        delete tree;
+        delete buffTree;
+    } else {
+        delete tree;
     }
 
     return 0;
