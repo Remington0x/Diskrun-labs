@@ -16,24 +16,30 @@ private:
     bool isSuchWord;
     bool doesAlreadyExist;
     int t;
-    // enum report {
-    //     OK = 0,
-    //
-    // }
 
     unsigned long long recSearch(TNode* node, TString& key) {
         int i = 0;
-        for (i = 0; i < node->keyCount; ++i) {
-            if (node->keys[i] == key) {
-                return (node->data[i]);
-            } else
-            if (node->keys[i] > key) {
+        if (node->isLeaf) {
+            for (i = 0; i < node->keyCount; ++i) {
+                if (node->keys[i] == key) {
+                    return (node->data[i]);
+                }
+            }
+        } else {
+            for (i = 0; i < node->keyCount; ++i) {
+                if (node->keys[i] == key) {
+                    return (node->data[i]);
+                } else
+                if (node->keys[i] > key) {
+                    return recSearch(node->children[i], key);
+                }
+            }
+
+            if (node->keys[i - 1] < key) {
                 return recSearch(node->children[i], key);
             }
         }
-        if (node->keys[i - 1] < key) {
-            return recSearch(node->children[i + 1], key);
-        }
+
         isSuchWord = false;
         return 0;
     }
@@ -77,19 +83,24 @@ private:
                 newNode->keys[i - t] = node->keys[i];
                 newNode->data[i - t] = node->data[i];
                 newNode->children[i - t] = node->children[i];
+                newNode->children[i - t]->parent = newNode;
             }
             newNode->children[i - t] = node->children[i];
+            newNode->children[i - t]->parent = newNode;
         }
 
         if (node != root) {
             newNode->parent = node->parent;
             //parent node manipulations
+            if (node->parent->keyCount == (2 * t - 1)) { //after these words there started a pure horror in the ukranian train
+                nodeSplit(node->parent);
+            }
             node->parent->keyCount += 1;
             node->parent->keys = (TString*)realloc(node->parent->keys, sizeof(TString) * node->parent->keyCount);
             node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
             node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
             i = 0;
-            while ((node->parent->keys[i] < node->keys[t - 1]) && (i < node->parent->keyCount - 1)) {
+            while ((i < node->parent->keyCount - 1) && (node->parent->keys[i] < node->keys[t - 1])) {
                 ++i;
             }
             insertInArray(node->parent->keys, node->parent->keyCount, node->keys[t - 1], i);
@@ -170,13 +181,17 @@ private:
     }
 
     void recPrintTree(TNode* node, int tab) {
-        if (node->children != nullptr) {
+        // std::cout << "Come into key[0] = " << node->keys[0] << ", data[0] = " << node->data[0] << std::endl;
+        // std::cout << "Printing...\n";
+        if (!node->isLeaf) {
+            // std::cout << "Is leaf = " << node->isLeaf << std::endl;
+            // std::cout << "children detected, printing them...\n";
             for (int i = 0; i <= node->keyCount; ++i) {
                 recPrintTree(node->children[i], tab + 1);
             }
         }
         for (int i = 0; i < tab; ++i) {
-            std::cout << '/';
+            std::cout << "  ";
         }
         for (int i = 0; i < node->keyCount; ++i) {
             std::cout << node->keys[i] << ' ';
@@ -189,6 +204,9 @@ public:
         root = (TNode*)malloc(sizeof(TNode));
         root->keyCount = 0;
         root->isLeaf = true;
+        root->children = nullptr;
+        root->data = nullptr;
+        root->keys = nullptr;
         t = treeMeasure;
     }
 
@@ -215,7 +233,7 @@ public:
     }
 
     void printTree() {
-        std::cout << root->keyCount << ' ' << root->keys[0] << ' ' << root->data[0] << std::endl;
+        //std::cout << root->keyCount << ' ' << root->keys[0] << ' ' << root->data[0] << std::endl;
         recPrintTree(root, 0);
     }
 
@@ -235,27 +253,27 @@ int main() {
     // a = b;
     // std::cout << a << std::endl;
 
-    bool flag = true;
+    // std::cout << "sizeof TString = " << sizeof(TString) << std::endl;
+    // std::cout << "sizeof unsigned long long = " << sizeof(unsigned long long) << std::endl;
+
+    //bool flag = true;
     TBTree tree(2);
-    char buff;
+    char buff[256];
     TString key;
     unsigned long long data;
-    while (flag) {
-        std::cin >> buff;
-        if (buff == 'a') {
+    while (std::cin >> buff) {
+        if (buff[0] == '+') {
             std::cin >> key.string >> data;
             tree.insert(key, data);
         } else
-        if (buff == 'p') {
-            tree.printTree();
-            std::cout << std::endl;
+        if (buff[0] == '-') {
+
         } else
-        if (buff == 's') {
-            std::cin >> key.string;
+        if (buff[0] == '!') {
+
+        } else {
+            stringAssignment(key.string, buff);
             tree.search(key);
-        } else
-        if (buff == 'x') {
-            flag = false;
         }
     }
 
