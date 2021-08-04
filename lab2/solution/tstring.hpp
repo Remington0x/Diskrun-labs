@@ -12,6 +12,25 @@ void stringAssignment(char* a, char* b) { // a = b
     }
 }
 
+bool stringCompare(const char* a, const char* b) {
+    if (a != nullptr && b != nullptr) {
+        int i = 0;
+        while (a[i] != '\0' && b[i] != '\0') {
+            if (a[i] != b[i]) {
+                return false;
+            }
+            ++i;
+        }
+        if (a[i] != b[i]) {
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
+}
+
 struct TString {
     TString() {
         string[0] = '\0';
