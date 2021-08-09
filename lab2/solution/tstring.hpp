@@ -1,6 +1,16 @@
 #ifndef TSTRING_HPP
 #define TSTRING_HPP
 
+void toLowerCase(char* a) {
+    int i = 0;
+    while (a[i] != '\0') {
+        if (a[i] >= 65 && a[i] <= 90) {
+            a[i] += 32;
+        }
+        ++i;
+    }
+}
+
 void stringAssignment(char* a, char* b) { // a = b
     if (a != nullptr && b != nullptr) {
         int i = 0;
