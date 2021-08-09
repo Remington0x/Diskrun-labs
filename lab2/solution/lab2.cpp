@@ -383,12 +383,19 @@ private:
     //this function is unsafe because of freeing one of node or bratelnik
     TNode* nodeMerge(TNode* node, TNode* bratelnik) {
         if (node->parent == root && node->parent->keyCount == 1) {
+            std::cout << "node->parent == root and root->keyCount == 1\n";
             //node = left son
             node = node->parent->children[0];
             bratelnik = node->parent->children[1];
             node->keyCount = 2 * t - 1;
             node->keys = (TString*)realloc(node->keys, node->keyCount * sizeof(TString));
-            node->data = (unsigned long long*)realloc(node->keys, node->keyCount * sizeof(unsigned long long));
+            node->data = (unsigned long long*)realloc(node->data, node->keyCount * sizeof(unsigned long long));
+            if (!node->isLeaf) {
+                node->children = (TNode**)realloc(node->children, sizeof(TNode*) * (node->keyCount + 1));
+                for (int i = t; i <= node->keyCount; ++i) {
+                    node->children[i] = bratelnik->children[i - t];
+                }
+            }
             node->keys[t - 1] = node->parent->keys[0];
             node->data[t - 1] = node->parent->data[0];
             for (int i = t; i < node->keyCount; ++i) {
@@ -409,27 +416,37 @@ private:
 
             return node;
         } else {
+            std::cout << "node->parent != root or root->keyCount != 1\n";
             if (node->parent->keyCount == (t - 1) && node->parent != root) {  //parent isn filled enough
+                std::cout << "parent isn filled enough\n";
                 if (nodeFill(node->parent) != 0) {  //parent cant be filled with nodeFill()
+                    std::cout << "parent cant be filled with nodeFill()\n";
                     int i = 0;
                     for (i = 0; node != node->parent->children[i]; ++i) {}
                     TNode* uncle = (i == 0) ? node->parent->children[i + 1] : node->parent->children[i - 1];
                     nodeMerge(node->parent, uncle);
                 }
+                std::cout << "parent is filled\n";
                 //parent is filled
             }
+            std::cout << "parent is filled ENOUGH ALREADY\n";
             TString keyBuff;
             unsigned long long dataBuff;
             int i = 0;
             while (node->parent->children[i] != node) {
                 ++i;
             }
+            std::cout << "node posititon in parent->children is " << i << std::endl;
 
             if (bratelnik == node->parent->children[i - 1]) {   //lil bro
+                std::cout << "lil bro\n";
                 keyBuff = node->parent->keys[i - 1];
                 dataBuff = node->parent->data[i - 1];
-                deleteFromArray(node->parent->children, node->keyCount, i);
-                deleteKey(node->parent, node->parent->keys[i]);
+                deleteFromArray(node->parent->children, node->parent->keyCount + 1, i);
+                // for (int counter1 = i + 1; counter1 <= node->parent->keyCount; ++counter1) {
+                //     node->parent->children[counter1 - 1] = node->parent->children[counter1];
+                // }
+                deleteKey(node->parent, node->parent->keys[i - 1]);
                 node->parent->keys = (TString*)realloc(node->parent->keys, sizeof(TString) * node->parent->keyCount);
                 node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
                 node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
@@ -455,13 +472,24 @@ private:
                 free(node);
                 return bratelnik;
             } else {    //big bro
+                std::cout << "big bro\n";
+
                 keyBuff = node->parent->keys[i];
                 dataBuff = node->parent->data[i];
-                deleteFromArray(node->parent->children, node->keyCount, i + 1);
-                deleteKey(node->parent, node->parent->keys[i + 1]);
+
+                std::cout << "keyBuff = " << keyBuff << ", dataBuff = " << dataBuff << std::endl;
+
+                std::cout << "node->parent->keyCount = " << node->parent->keyCount << ", node->parent->children[1]->keys[0] = " << node->parent->children[1]->keys[0] << std::endl;
+                deleteFromArray(node->parent->children, node->parent->keyCount + 1, i + 1);
+                std::cout << "node->parent->keyCount = " << node->parent->keyCount << ", node->parent->children[1]->keys[0] = " << node->parent->children[1]->keys[0] << std::endl;
+                std::cout << "node->parent->keyCount = " << node->parent->keyCount << ", node->parent->children[2]->keys[0] = " << node->parent->children[2]->keys[0] << std::endl;
+                deleteKey(node->parent, node->parent->keys[i]);
                 node->parent->keys = (TString*)realloc(node->parent->keys, sizeof(TString) * node->parent->keyCount);
                 node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
                 node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
+
+                std::cout << "node->parent->keyCount = " << node->parent->keyCount << ", node->parent->children[1]->keys[0] = " << node->parent->children[1]->keys[0] << std::endl;
+
                 node->keyCount = 2 * t - 1;
                 node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
                 node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
@@ -525,10 +553,14 @@ private:
             return recDelete(node->children[j], key);
         }
 
-        std::cout << "Node identificated successfully\n";
+        std::cout << "node->keys[0] = " << node->keys[0] << std::endl;
+        std::cout << "Node identified successfully\n";
         //at this moment i think i already found neccesary node
         if (node->isLeaf) {
+            std::cout << "node is leaf\n";
             if (node->keyCount > (t - 1) || node == root) { //what a luck
+                std::cout << "node->keyCount = " << node->keyCount << std::endl;
+                std::cout << "Leaf is filled enough\n";
                 deleteKey(node, key);
                 node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
                 node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
@@ -605,6 +637,7 @@ private:
             }
 
             if (node->children[i]->keyCount > (t - 1)) {    //prev son suits
+                std::cout << "prev son suits\n";
                 TString k1;
                 unsigned long long d1;
                 //find ultraright key
@@ -616,17 +649,25 @@ private:
                 node->data[i] = d1;
             } else
             if (node->children[i + 1]->keyCount > (t - 1)) {//next son suits
+                std::cout << "next son suits\n";
                 TString k1;
                 unsigned long long d1;
                 //find ultraleft key
-                TNode* buff = findLeft(node->children[i]);
+                TNode* buff = findLeft(node->children[i + 1]);
                 k1 = buff->keys[0];
                 d1 = buff->data[0];
                 recDelete(buff, k1);
                 node->keys[i] = k1;
                 node->data[i] = d1;
             } else {    //both sons arent filled enough
+                std::cout << "both sons arent filled enough\n";
+                std::cout << "MERGING " << node->children[i]->keys[0] << " AND " << node->children[i + 1]->keys[0] << std::endl;
                 TNode* son = nodeMerge(node->children[i], node->children[i + 1]);
+                TString counter;
+                counter.string[1] = '\0';
+                for (counter.string[0] = 'a'; counter.string[0] <= 'j'; ++counter.string[0]) {
+                    search(counter);
+                }
                 recDelete(son, key);
             }
         }
