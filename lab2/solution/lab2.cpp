@@ -19,6 +19,14 @@ private:
     bool doesAlreadyExist;
     int t;
 
+    template <class T>
+    bool deleteFromArray(T* array, int size, int pos) {
+        for (int i = pos + 1; i < size; ++i) {
+            array[i - 1] = array[i];
+        }
+        return true;
+    }
+
     unsigned long long recSearch(TNode* node, TString& key) {
         int i = 0;
         if (node->isLeaf) {
@@ -423,7 +431,7 @@ private:
                 deleteFromArray(node->parent->children, node->keyCount, i);
                 deleteKey(node->parent, node->parent->keys[i]);
                 node->parent->keys = (TString*)realloc(node->parent->keys, sizeof(TString) * node->parent->keyCount);
-                node->parent->keys = (unsigned long long*)realloc(node->parent->keys, sizeof(unsigned long long) * node->parent->keyCount);
+                node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
                 node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
                 bratelnik->keyCount = 2 * t - 1;
                 bratelnik->keys = (TString*)realloc(bratelnik->keys, sizeof(TString) * bratelnik->keyCount);
@@ -452,7 +460,7 @@ private:
                 deleteFromArray(node->parent->children, node->keyCount, i + 1);
                 deleteKey(node->parent, node->parent->keys[i + 1]);
                 node->parent->keys = (TString*)realloc(node->parent->keys, sizeof(TString) * node->parent->keyCount);
-                node->parent->keys = (unsigned long long*)realloc(node->parent->keys, sizeof(unsigned long long) * node->parent->keyCount);
+                node->parent->data = (unsigned long long*)realloc(node->parent->data, sizeof(unsigned long long) * node->parent->keyCount);
                 node->parent->children = (TNode**)realloc(node->parent->children, sizeof(TNode*) * (node->parent->keyCount + 1));
                 node->keyCount = 2 * t - 1;
                 node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
@@ -489,14 +497,41 @@ private:
         }
     }
 
+    TNode* findLeft(TNode* node) {
+        if (!node->isLeaf) {
+            return findRight(node->children[0]);
+        } else {
+            return node;
+        }
+    }
+
     //this function is probably unsafe because of nodeMerge, TNode* node might be freed inside
     bool recDelete(TNode* node, TString& key) {
+        int j = 0;
+        while (node->keys[j] < key && j < node->keyCount) {
+            std::cout << "NODE->keys[j] = " << node->keys[j] << ", key = " << key << std::endl;
+            ++j;
+        }
+        //j = pos of key, j = pos of array member more than key, j = node->keyCount
+        if (j == node->keyCount) {
+            if (!node->isLeaf) {
+                return recDelete(node->children[j], key);
+            } else {
+                std::cout << "j == node->keyCount\n";
+                return false;
+            }
+        } else
+        if (node->keys[j] > key) {
+            return recDelete(node->children[j], key);
+        }
+
+        std::cout << "Node identificated successfully\n";
         //at this moment i think i already found neccesary node
         if (node->isLeaf) {
             if (node->keyCount > (t - 1) || node == root) { //what a luck
                 deleteKey(node, key);
-                node->keys = (TString*)realloc(sizeof(TString) * node->keyCount);
-                node->data = (unsigned long long*)realloc(sizeof(unsigned long long) * node->keyCount);
+                node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
+                node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
             } else {    //leaf is not filled enough
                 TNode* brother;
                 brother = lookForBros(node);
@@ -507,20 +542,20 @@ private:
 
                     //pick k2 from parent
                     //pick divider key from brother (k1)
-                    for (i = 0; i <= parent->keyCount; ++i) {
-                        if (parent->children[i] == node) {break;}
+                    for (i = 0; i <= node->parent->keyCount; ++i) {
+                        if (node->parent->children[i] == node) {break;}
                     }
                     bool isLilBro = brother->keys[0] < node->keys[0];
                     if (isLilBro) { //lil bro
                         k1 = brother->keys[brother->keyCount - 1];
                         d1 = brother->data[brother->keyCount - 1];
-                        k2 = parent->keys[i - 1];
-                        d2 = parent->data[i - 1];
+                        k2 = node->parent->keys[i - 1];
+                        d2 = node->parent->data[i - 1];
                     } else {    //big bro
                         k1 = brother->keys[0];
                         d1 = brother->data[0];
-                        k2 = parent->keys[i];
-                        d2 = parent->data[i];
+                        k2 = node->parent->keys[i];
+                        d2 = node->parent->data[i];
                     }
                     //i - node posititon in parent->children[]
                     //or
@@ -542,11 +577,11 @@ private:
                         node->parent->data[i] = d1;
                     }
 
-                    if (!deleteKey(node->brother, k1)) {
+                    if (!deleteKey(brother, k1)) {
                         return false;
                     } else {
-                        node->brother->keys = (TString*)realloc(sizeof(TString) * node->brother->keyCount);
-                        node->brother->data = (unsigned long long*)realloc(sizeof(unsigned long long) * node->brother->keyCount);
+                        brother->keys = (TString*)realloc(brother->keys, sizeof(TString) * brother->keyCount);
+                        brother->data = (unsigned long long*)realloc(brother->data, sizeof(unsigned long long) * brother->keyCount);
                     }
                 } else {    //there is no suitable bratelnik
                     bool isLilBro = !(node->parent->children[0] == node);
@@ -558,8 +593,8 @@ private:
                     node = nodeMerge(node, brother);
 
                     deleteKey(node, key);
-                    node->keys = (TString*)realloc(sizeof(TString) * node->keyCount);
-                    node->data = (unsigned long long*)realloc(sizeof(unsigned long long) * node->keyCount);
+                    node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
+                    node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
                 }
             }
         } else {    //its not leaf monkaS
@@ -595,6 +630,7 @@ private:
                 recDelete(son, key);
             }
         }
+        return true;
     }
 
 public:
@@ -676,7 +712,7 @@ public:
         return t;
     }
 
-    bool deleteNode(TString& key) {
+    bool deleteKeyFromTree(TString& key) {
         return recDelete(root, key);
     }
 
@@ -708,10 +744,14 @@ int main() {
     while (std::cin >> buff) {
         if (buff[0] == '+') {
             std::cin >> key.string >> data;
+            toLowerCase(key.string);
             std::cout << (tree->insert(key, data) ? "OK\n" : "Exist\n");
         } else
         if (buff[0] == '-') {
-
+            std::cin >> key.string;
+            toLowerCase(key.string);
+            //std::cout << key.string << std::endl;
+            std::cout << (tree->deleteKeyFromTree(key) ? "OK\n" : "NoSuchWord\n");
         } else
         if (buff[0] == '!') {
             std::cin >> buff;
@@ -744,6 +784,7 @@ int main() {
                 std::cout << "ERROR: Unknown command\n";
             }
         } else {
+            toLowerCase(buff);
             stringAssignment(key.string, buff);
             tree->search(key);
         }
