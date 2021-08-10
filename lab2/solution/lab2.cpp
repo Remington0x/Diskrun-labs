@@ -286,10 +286,10 @@ private:
         for (i = 0; i <= node->parent->keyCount; ++i) {
             if (node->parent->children[i] == node) break;
         }
-        if (node->parent->children[i - 1]->keyCount > t - 1) {
+        if (i != 0 && node->parent->children[i - 1]->keyCount > t - 1) {
             return node->parent->children[i - 1];
         } else
-        if (node->parent->children[i + 1]->keyCount > t - 1) {
+        if (i != node->parent->keyCount && node->parent->children[i + 1]->keyCount > t - 1) {
             return node->parent->children[i + 1];
         } else {
             return nullptr;
@@ -535,6 +535,9 @@ private:
 
     //this function is probably unsafe because of nodeMerge, TNode* node might be freed inside
     bool recDelete(TNode* node, TString& key) {
+        if (node == nullptr) {
+            return false;
+        }
         int j = 0;
         while (node->keys[j] < key && j < node->keyCount) {
             std::cout << "NODE->keys[j] = " << node->keys[j] << ", key = " << key << std::endl;
@@ -565,9 +568,12 @@ private:
                 node->keys = (TString*)realloc(node->keys, sizeof(TString) * node->keyCount);
                 node->data = (unsigned long long*)realloc(node->data, sizeof(unsigned long long) * node->keyCount);
             } else {    //leaf is not filled enough
+                std::cout << "leaf is not filled enough\n";
                 TNode* brother;
                 brother = lookForBros(node);
+                std::cout << "look for bros success\n";
                 if (brother != nullptr) {
+                    std::cout << "brother found\n";
                     TString k1, k2;
                     unsigned long long d1, d2;
                     int i = 0;
@@ -616,6 +622,7 @@ private:
                         brother->data = (unsigned long long*)realloc(brother->data, sizeof(unsigned long long) * brother->keyCount);
                     }
                 } else {    //there is no suitable bratelnik
+                    std::cout << "brother not found\n";
                     bool isLilBro = !(node->parent->children[0] == node);
                     int i;
                     for (i = 0; i <= node->parent->keyCount; ++i) {
@@ -754,6 +761,7 @@ public:
     }
 
     bool deleteKeyFromTree(TString& key) {
+        if (root->keyCount == 0) {return false;}
         return recDelete(root, key);
     }
 
