@@ -45,13 +45,19 @@ struct TString {
     TString() {
         string[0] = '\0';
     }
+    TString(const TString& s) {
+        for (int i = 0; i < 256; ++i) {
+            string[i] = s.string[i];
+        }
+    }
+    ~TString() {}
     char string[256];
     TString& operator=(const TString& b);
 };
 
 
 //works with lower-cased chars
-bool operator<(TString a, TString b) {
+bool operator<(const TString& a, const TString& b) {
     int i = 0;
     while (a.string[i] != '\0' && b.string[i] != '\0') {
         if (a.string[i] < b.string[i]) {
@@ -70,7 +76,7 @@ bool operator<(TString a, TString b) {
     }
 }
 
-bool operator>(TString a, TString b) {
+bool operator>(const TString& a, const TString& b) {
     int i = 0;
     while (a.string[i] != '\0' && b.string[i] != '\0') {
         if (a.string[i] > b.string[i]) {
@@ -89,7 +95,7 @@ bool operator>(TString a, TString b) {
     }
 }
 
-bool operator==(TString a, TString b) {
+bool operator==(const TString& a, const TString& b) {
     int i = 0;
     while (a.string[i] != '\0' && b.string[i] != '\0') {
         if (a.string[i] != b.string[i]) {
@@ -105,7 +111,7 @@ bool operator==(TString a, TString b) {
     }
 }
 
-std::ostream& operator<<(std::ostream& out, TString a) {
+std::ostream& operator<<(std::ostream& out, const TString& a) {
     int i = 0;
     while (a.string[i] != '\0') {
         out << a.string[i];
