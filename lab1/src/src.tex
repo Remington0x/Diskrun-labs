@@ -1,113 +1,114 @@
 \section{Описание}
-Требуется написать реализацию алгоритма сортировки подсчётом. Турум-пум-пум...
+Требуется написать реализацию алгоритма сортировки подсчётом.
+Для последовательности ключей основная идея сортировки подсчётом состоит в том, чтобы подсчитать, сколько раз встретится каждый ключ, и затем вывести отсортированную последовательность. 
 
-Как сказано в \cite{Kormen}: \enquote{основная идея сортировки подсчетом заключается в том, чтобы для каждого входного 
-элемента $x$ определить количество элементов, которые меньше $x$}.
+Для сложных структур типа \enquote{ключ-значение} алгоритм немного сложнее.
 
-Или можно так:\\
-Основная идея сортировки подсчетом заключается в том, чтобы для каждого входного 
-элемента $x$ определить количество элементов, которые меньше $x$ \cite{Kormen}.
+Для них, как сказано в \cite{cs_ifmo}, идея алгоритма состоит в предварительном подсчете количества элементов с различными ключами в исходном массиве и разделении результирующего массива на части соответствующей длины (будем называть их блоками). Затем при повторном проходе исходного массива каждый его элемент копируется в специально отведенный его ключу блок, в первую свободную ячейку. Это осуществляется с помощью массива индексов $P$, в котором хранятся индексы начала блоков для различных ключей. $P[key]$ — индекс в результирующем массиве, соответствующий первому элементу блока для ключа $key$. 
 
 \pagebreak
 
 \section{Исходный код}
-Здесь должно быть подробное описание программы и основные этапы написания кода.
-
 На каждой непустой строке входного файла располагается пара \enquote{ключ-значение}, поэтому создадим новую 
-структуру $KV$, в которой будем хранить ключ и значение. И так далее.
+структуру $Token$, в которой будем хранить ключ и значение.
 
-\begin{lstlisting}[language=C]
-#include "stdio.h"
-#include "stdlib.h"
+Реализуем функцию $stringAssignment(source, destination)$, которая будет присваивать строке $destination$ содержимое строки $source$. 
 
-struct KV{
+Создаём массив $A$ и в цикле заполняем его. В процессе заполнения массива также пересчитываем количество структур, ключ которых равен $i$ и записываем это число в $keys[i]$.
+
+Превращаем массив $keys$ в массив, хранящий в $keys[i]$ сумму элементов от $0$ до $i - 1$ старого массива $keys$, а затем \enquote{сдвигаем} его на элемент вправо, так, чтобы получился массив, содержащий в $keys[i]$ индекс начала блока ключа $i$ в массиве $B$.
+
+Произведем саму сортировку. Еще раз пройдем по исходному массиву A и для всех $i\in[0, n - 1]$ будем помещать структуру $A[i]$ в массив B на место $keys[A[i].key]$, а затем увеличивать $keys[A[i].key]$ на $1$. Здесь $A[i].key$ — это ключ структуры, находящейся в массиве $A$ на $i$-том месте. 
+
+После завершения алгоритма в $B$ будет содержаться отсортированная исходная последовательность.
+
+\begin{lstlisting}[language=C++]
+#include <iostream>
+
+struct Token {
 	int key;
-	char value;
-} KV;
+	char data[2048];
+};
 
-void sort(struct KV * B, struct KV * Res, int max, int size){
-	int C[max+1];
-	for(int i = 0; i <= max; i++)
-		C[i] = 0;
-	for(int i = 0; i < size; i++){
-		int idx = B[i].key;
-		C[idx]++;
+int stringAssignment(char* source, char* destination) {
+	int i = 0;
+	while (source[i] != '\0') {
+		destination[i] = source[i];
+		++i;
 	}
-	for(int i = 1; i <= max; i++)
-		C[i] = C[i] + C[i-1];
-
-	for(int i = size-1; i >= 0; i--){
-		int idx = B[i].key;
-		int pos = C[idx];
-		Res[pos-1] = B[i];
-		C[idx]--;
-	}
+	destination[i] = source[i];
+	return 0;
 }
 
-int main()
-{
-	int key;
-	char value;
-	struct KV * A = NULL;
-	int size = 0;
-	int max = 0;
-
-	while (scanf("%d\t%c",&key, &value) != EOF)
-	{
-		size++;
-		A = (struct KV *)realloc(A, size*sizeof(struct KV));
-		A[size-1].key = key;
-		A[size-1].value = value;
-		if(key > max)
-			max = key;
+int main() {
+	int keys[1000000];
+	for (int i = 0; i < 1000000; ++i) {
+		keys[i] = 0;
 	}
-	
-	struct KV Res[size];
-	sort(A, Res, max, size);
-	for(int i = 0; i < size; i++)
-		printf("%d\t%c\n", Res[i].key, Res[i].value);
-	    
-    free(A);
+	int num_count = 0;
+	int int_buff = 0;
+	char char_buff[2048];
+	Token* array_a = nullptr;
 
+	while (scanf("%d\t%s", &int_buff, char_buff) > 0) {
+		++keys[int_buff];
+		++num_count;
+		array_a = (Token*)realloc(array_a, sizeof(Token) * num_count);
+		array_a[num_count - 1].key = int_buff;
+		stringAssignment(char_buff, array_a[num_count - 1].data);
+	}
+
+	Token* array_b = (Token*)malloc(sizeof(Token) * num_count);
+	for (int i = 0; i < num_count; ++i) {
+		array_b[i].key = -1;
+		for (int j = 0; j < 2048; ++j) {
+			array_b[i].data[j] = '\0';
+		}
+	}
+
+	for (int i = 1; i < 1000000; ++i) {
+		keys[i] = keys[i] + keys[i - 1];
+	}
+
+	for (int i = 999999; i > 0; --i) {
+		keys[i] = keys[i - 1];
+	}
+
+	keys[0] = 0;
+
+	for (int i = 0; i < num_count; ++i) {
+		array_b[keys[array_a[i].key]].key = array_a[i].key;
+		stringAssignment(array_a[i].data, array_b[keys[array_a[i].key]].data);
+		++keys[array_a[i].key];
+	}
+
+	for (int i = 0; i < num_count; ++i) {
+		printf("%06d\t%s\n", array_b[i].key, array_b[i].data);
+	}
+
+	free(array_a);
+	free(array_b);
+
+	return 0;
 }
 	
 \end{lstlisting}
 
-В случае, если код не помещается на одну-две страницы $A4$, тогда следует сделать табличку следующего вида:
-\begin{longtable}{|p{7.5cm}|p{7.5cm}|}
-\hline
-\rowcolor{lightgray}
-\multicolumn{2}{|c|} {main.c}\\
-\hline
-void sort(struct KV \& B, struct KV \& Res, int max, int size)&Функция сортировки подсчётом\\
-\hline
-\rowcolor{lightgray}
-\multicolumn{2}{|c|} {file1.c}\\
-\hline
-void function\_name()&Функция, \enquote{которая почти всегда работает, но неясно, что она делает}.\\
-\hline
-\end{longtable}
-В этом случае структуры или классы должны быть полностью приведены в листинге (без реализации методов).
-\begin{lstlisting}[language=C]
-struct KV{
-	int key;
-	char value;
-} KV;
-\end{lstlisting}
 \pagebreak
 
 \section{Консоль}
 \begin{alltt}
-a.kukhticev$ gcc -pedantic -Wall -std=c99 -Werror -Wno-sign-compare -lm da10.c -o da10 --some_long_argument=true
-a.kukhticev$ cat test1 
-87	a
-13	b
-89	c
-13	d
-a.kukhticev$ ./da10 < test1 
-13	b
-13	d
-87	a
-89	c
+[alext@alext-pc solution]$ make
+g++ -std=c++14 -pedantic -Wall -Wextra-Wno-unused-variable lab1.cpp -o solution
+[alext@alext-pc solution]$ cat test1 
+472891 asakdhfl
+130391 bfsadfkjlsdf
+891767 csdafKHdf
+130000 dkhjs32
+[alext@alext-pc solution]$ ./solution <\ test1 
+130000	dkhjs32
+130391	bfsadfkjlsdf
+472891	asakdhfl
+891767	csdafKHdf
 \end{alltt}
 \pagebreak

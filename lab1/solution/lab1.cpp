@@ -25,7 +25,6 @@ int main() {
     char char_buff[2048];
     Token* array_a = nullptr;
 
-
     while (scanf("%d\t%s", &int_buff, char_buff) > 0) {
         ++keys[int_buff];
         ++num_count;
@@ -33,13 +32,6 @@ int main() {
         array_a[num_count - 1].key = int_buff;
         stringAssignment(char_buff, array_a[num_count - 1].data);
     }
-
-    // printf("NUM COUNT = %d\n", num_count);
-    //
-    // for (int i = 0; i < 100; ++i) {
-    //     printf("%d ", keys[i]);
-    // }
-    // printf("\n\n");
 
     Token* array_b = (Token*)malloc(sizeof(Token) * num_count);
     for (int i = 0; i < num_count; ++i) {
@@ -53,17 +45,9 @@ int main() {
         keys[i] = keys[i] + keys[i - 1];
     }
 
-    // for (int i = 0; i < 100; ++i) {
-    //     printf("%d ", keys[i]);
-    // }
-
     for (int i = 999999; i > 0; --i) {
         keys[i] = keys[i - 1];
     }
-
-    // for (int i = 0; i < 100; ++i) {
-    //     printf("%d ", keys[i]);
-    // }
 
     keys[0] = 0;
 
@@ -74,10 +58,8 @@ int main() {
     }
 
     //Вывод
-    //printf("NUM COUNT = %d\n", num_count);
     for (int i = 0; i < num_count; ++i) {
-        // if (array_b[i].key != -1)
-            printf("%06d\t%s\n", array_b[i].key, array_b[i].data);
+        printf("%06d\t%s\n", array_b[i].key, array_b[i].data);
     }
 
     free(array_a);
