@@ -1,0 +1,238 @@
+\section{Описание}
+Требуется осуществить реализацию B-дерева, реализовать функции добавления в него ключей, поиска по дереву, удаления ключей. Также необходимо реализовать запись структуры в файл и чтение из него.\\
+Согласно \cite{b-tree-ifmo}, B-дерево является идеально сбалансированным, то есть глубина всех его листьев одинакова. B-дерево имеет следующие свойства ($t$ — параметр дерева, называемый минимальной степенью B-дерева, не меньший $2$.):
+\begin{itemize}
+	\item Каждый узел, кроме корня, содержит не менее $t-1$ ключей, и каждый внутренний узел имеет по меньшей мере $t$ дочерних узлов. Если дерево не является пустым, корень должен содержать как минимум один ключ. 
+	\item Каждый узел, кроме корня, содержит не более $2t-1$ ключей и не более чем $2t$ сыновей во внутренних узлах.
+	\item Корень содержит от 1 до $2t-1$ ключей, если дерево не пусто и от $2$ до $2t$ детей при высоте большей 0.
+	\item Каждый узел дерева, кроме листьев, содержащий ключи $k1,...,kn$, имеет $n+1$ сына. $i$-й сын содержит ключи из отрезка $[k_{i-1};k_{i}]$, $k_0=-\infty$, $k_n+1=\infty$.
+	\item Ключи в каждом узле упорядочены по неубыванию.
+	\item Все листья находятся на одном уровне.
+\end{itemize}
+
+\pagebreak
+
+\section{Исходный код}
+Поскольку в качестве ключа будет использоваться строка символов, нам пригодится реализация string. Создаём структуру {\ttfamily TString}, реализуем для неё некоторые операторы, в частности операторы {\itshape сравнения}.\\
+Изначально ноды дерева были реализованы в виде массивов, но это привело к ошибкам и утечкам памяти, в связи с чем было принято решение реализовать списки ключей и данных в нодах при помощи структуры {\ttfamily vector}. Реализую методы, схожие с методами {\ttfamily std::vector: at(), erase(), insert()} и т.\ д.\\
+В файле основной программы создадим класс {\ttfamily TBTree}, реализуем в нём структуру ноды {\ttfamily TNode}, необходимые поля, а также различные методы, которые будут перечислены в таблице далее.\\
+{\ttfamily main()} по большей части состоит из т.\ н. игрового цикла, в котором до конца ввода обрабатываются команды пользователя.
+
+\begin{lstlisting}[language=C++]
+template <class T>
+class TVectorNode {
+public:
+	T data;
+	std::shared_ptr< TVectorNode<T> > next;
+	TVectorNode() noexcept : data(), next(nullptr) {};
+	explicit TVectorNode(const T & elem) noexcept : data(elem), next(nullptr) {};
+};
+
+template <class T>
+class TVector {
+private:
+	int size;
+	std::shared_ptr< TVectorNode<T> > leftNode;
+public:
+	void insert(T data, int pos);
+	T at(int pos);
+	void erase(int pos);
+	void erase(int pos1, int pos2);
+	int getSize();
+
+	TVector() noexcept : leftNode(nullptr) {};
+};
+\end{lstlisting}
+
+\begin{longtable}{|p{7.5cm}|p{7.5cm}|}
+\hline
+\rowcolor{lightgray}
+\multicolumn{2}{|c|} {tvector.hpp}\\
+\hline
+{\ttfamily void insert(T data, int pos)}&Вставляет {\ttfamily data} на позицию {\ttfamily pos}.\\
+\hline
+{\ttfamily T at(int pos)}&Возвращает элемент, находящийся на позиции {\ttfamily pos}.\\
+\hline
+{\ttfamily void erase(int pos)}&Удаляет элемент с позиции {\ttfamily pos}.\\
+\hline
+{\ttfamily void erase(int pos1, int pos2)}&Удаляет элементы с позиции {\ttfamily pos1} до {\ttfamily pos2}.\\
+\hline
+{\ttfamily int getSize()}&Возвращает размер вектора.\\
+\hline
+\end{longtable}
+
+\begin{lstlisting}[language=C++]
+	struct TString {
+    char string[MAX_LENGTH];
+    TString() {
+        string[0] = '\0';
+    }
+    TString(const TString& s) {
+        for (int i = 0; i < 256; ++i) {
+            string[i] = s.string[i];
+        }
+    }
+    ~TString() {}
+    void nullStr() {
+        for (int i = 0; i < MAX_LENGTH; ++i) {
+            string[i] = '\0';
+        }
+    }
+    TString& operator=(const TString& b);
+};
+\end{lstlisting}
+
+\begin{longtable}{|p{7.5cm}|p{7.5cm}|}
+\hline
+\rowcolor{lightgray}
+\multicolumn{2}{|c|} {tstring.hpp}\\
+\hline
+{\ttfamily TString()}&Конструктор по умолчанию, кладёт в нулевой элемент строки терминальный символ.\\
+\hline
+{\ttfamily TString(const TString\& s)}&Конструктор, инициализирующий новую строку уже существующей.\\
+\hline
+{\ttfamily void nullStr()}&Метод, заполняющий всю строку терминальными символами.\\
+\hline
+{\ttfamily bool operator<(const TString\& a, const TString\& b)}&Перегрузка оператора \enquote{меньше}.\\
+\hline
+{\ttfamily bool operator>(const TString\& a, const TString\& b)}&Перегрузка оператора \enquote{больше}.\\
+\hline
+{\ttfamily bool operator==(const TString\& a, const TString\& b)}&Перегрузка оператора \enquote{равно}.\\
+\hline
+{\ttfamily std::ostream\& operator$<<$(std::ostream\& out, const TString\& a)}&Перегрузка оператора вывода.\\
+\hline
+\end{longtable}
+
+В этом случае структуры или классы должны быть полностью приведены в листинге (без реализации методов).
+\begin{lstlisting}[language=C++]
+class TBTree {
+private:
+	struct TNode {
+		bool isLeaf;
+		int keyCount;
+		TVector<TString> keys;
+		TVector<unsigned long long> data;
+		TVector<TNode*> children;
+		TNode* parent;
+	};
+	TNode* root;
+	bool isSuchWord;
+	bool doesAlreadyExist;
+	int t;
+	int nodeCount;
+
+	template <class T>
+	bool deleteFromArray(T* array, int size, int pos);
+	unsigned long long recSearch(TNode* node, TString& key);
+	void nodeAddKey(TNode* node, TString& key, unsigned long long& data);
+	void recCheckParentage(TNode* node);
+	int recCheckCounter;
+	void _rCS(TNode* node);
+	void recCheckSize(TNode* node);
+	TNode* nodeSplit(TNode* node, TNode* child);
+	void recInsert(TNode* node, TString& key, unsigned long long& data);
+	void recFreeTree(TNode* node);
+	void recPrintTree(TNode* node, int tab);
+	void recSave(TNode* node, FILE* out);
+	bool loadNode(TNode* node, TNode* parent, FILE* in);
+	bool deleteKey(TNode* node, const TString& key);
+	TNode* lookForBros(TNode* node);
+	int nodeFill(TNode* node);
+	TNode* nodeMerge(TNode* nodeOrig, TNode* bratelnikOrig);
+	TNode* findRight(TNode* node);
+	TNode* findLeft(TNode* node);
+	bool recDelete(TNode* node, const TString& key);
+
+public:
+	void init(int treeMeasure);
+	TBTree();
+	TBTree(int treeMeasure);
+	~TBTree();
+	void search(TString& key);
+	bool insert(TString& key, unsigned long long& data);
+	void printTree();
+	void save(FILE* out);
+	bool load(FILE* in);
+	int getMeasure();
+	bool deleteKeyFromTree(TString& key);
+	void checkParentage();
+};
+\end{lstlisting}
+
+\begin{longtable}{|p{7.5cm}|p{7.5cm}|}
+\hline
+\rowcolor{lightgray}
+\multicolumn{2}{|c|} {main.cpp}\\
+\hline
+{\ttfamily unsigned long long recSearch(TNode* node, TString\& key)}&Рекуррентная функция, вспомогательная для публичного метода {\ttfamily search}. Возвращает значение, соответствующее ключу {\ttfamily key}, начиная поиск в ноде {\ttfamily node}.\\
+\hline
+{\ttfamily void nodeAddKey(TNode* node, TString\& key, unsigned long long\& data)}&Добавляет {\ttfamily key} и {\ttfamily data} в узел {\ttfamily node}.\\
+\hline
+{\ttfamily void recCheckParentage(TNode* node)}&Рекуррентная функция проверки правильности информации о родителе. Используетя в отладочных целях.\\
+\hline
+{\ttfamily void recCheckSize(TNode* node)}&Проверяет соответствие атрибута узла реальному размеру. Используется в отладочных целях.\\
+\hline
+{\ttfamily TNode* nodeSplit(TNode* node, TNode* child)}&Разбивает узел размера $2t-1$ на два узла размерами $t-1$.\\
+\hline
+{\ttfamily void recInsert(TNode* node, TString\& key, unsigned long long\& data)}&Рекуррентная функция, выполняет вставку значений {\ttfamily key} и {\ttfamily data} в дерево. Вспомогательная функция для метода {\ttfamily insert}\\
+\hline
+{\ttfamily void recFreeTree(TNode* node)}&Корректно освобождает занятую деревом память.\\
+\hline
+{\ttfamily void recPrintTree(TNode* node, int tab)}&Рекуррентная функция печати дерева на экран. Вспомогательная для {\ttfamily printTree}.\\
+\hline
+{\ttfamily void recSave(TNode* node, FILE* out)}&Рекуррентная функция сохранения узла {\ttfamily node} в файл {\ttfamily out}. Вспомогательная для {\ttfamily TBTree::save}\\
+\hline
+{\ttfamily bool loadNode(TNode* node, TNode* parent, FILE* in)}&Рекуррентная функция загрузки узла из файла, на вход принимаются указатель на область памяти, выделенную под узел, указатель на родительский узел, а также указатель на файл. Возвращает {\ttfamily true}, если считано успешно, {\ttfamily false} в обратном случае.\\
+\hline
+{\ttfamily bool deleteKey(TNode* node, const TString\& key)}&Удаляет из узла {\ttfamily node} значение {\ttfamily key} и соответствующее ему значение данных. Возвращает {\ttfamily true} в случае успеха, {\ttfamily false} в обратном случае.\\
+\hline
+{\ttfamily TNode* lookForBros(TNode* node)}&Ищет братьев, из которых можно взять значение для узла, который нужно дополнить. Возвращает указатель на подходящего брата, если он есть, или {\ttfamily nullptr} в обратном случае.\\
+\hline
+{\ttfamily int nodeFill(TNode* node)}&Дополняет узел, чтобы из него можно было удалить значение. Возвращает 0 в случае успеха, 1 в случае если целевая нода является корнем, 2 в случае если дополнить из братьев невозможно.\\
+\hline
+{\ttfamily TNode* nodeMerge(TNode* nodeOrig, TNode* bratelnikOrig)}&Выполняет слияние нод {\ttfamily nodeOrig} и {\ttfamily bratelnikOrig}. Возвращает указатель на ноду, которая получилась в результате.\\
+\hline
+{\ttfamily TNode* findRight(TNode* node)}&Рекуррентная функция для нахождения самого правого узла. Используется для нахождения правого узла левого поддерева.\\
+\hline
+{\ttfamily TNode* findLeft(TNode* node)}&Аналогичная функция, но для самого левого узла.\\
+\hline
+{\ttfamily bool recDelete(TNode* node, const TString\& key)}&Рекуррентная функция для удаления значения {\ttfamily key} начиная с ноды {\ttfamily node}.\\
+\hline
+{\ttfamily TBTree(int treeMeasure);}&Конструктор класса, создаёт дерево с параметром {\ttfamily treeMeasure}\\
+\hline
+{\ttfamily void search(TString\& key)}&Функция поиска ключа {\ttfamily key} в дереве.\\
+\hline
+{\ttfamily bool insert(TString\& key, unsigned long long\& data)}&Функция вставки ключа {\ttfamily key} и данных {\ttfamily data} в дерево. Возвращает {\ttfamily true}, если вставка успешна, {\ttfamily false} в случае неуспеха.\\
+\hline
+{\ttfamily void printTree()}&Выводит дерево на экран, может использоваться только на малом наборе данных в дереве, из-за возникающей путаницы при отображении.\\
+\hline
+{\ttfamily void save(FILE* out)}&Сохраняет дерево в файл {\ttfamily out}.\\
+\hline
+{\ttfamily bool load(FILE* in)}&Загружает дерево из файла {\ttfamily in}. Возвращает {\ttfamily true} в случае успеха, {\ttfamily false} в случае неуспеха.\\
+\hline
+{\ttfamily int getMeasure()}&Возвращает параметр дерева $t$.\\
+\hline
+{\ttfamily bool deleteKeyFromTree(TString\& key)}&Удаляет из дерева ключ {\ttfamily key}. Возвращает {\ttfamily true} в случае успеха, {\ttfamily false} в случае неуспеха.\\
+\hline
+{\ttfamily void checkParentage()}&Функция корректности информации о родителях, используется в отладочных целях.\\
+\hline
+\end{longtable}
+
+\pagebreak
+
+\section{Консоль}
+\begin{alltt}
+a.kukhticev$ gcc -pedantic -Wall -std=c99 -Werror -Wno-sign-compare -lm da10.c -o da10 --some_long_argument=true
+a.kukhticev$ cat test1 
+87	a
+13	b
+89	c
+13	d
+a.kukhticev$ ./da10 < test1 
+13	b
+13	d
+87	a
+89	c
+\end{alltt}
+\pagebreak
+
