@@ -76,7 +76,7 @@ private:
         node->keyCount += 1;
         node->keys.insert(key, i);
         node->data.insert(data, i);
-        recCheckSize(root);
+        //recCheckSize(root);
     }
 
     void recCheckParentage(TNode* node) {
@@ -189,16 +189,16 @@ private:
         if (!node->isLeaf) {
             for (i = 0; i <= node->keyCount; ++i) {
                 if (node->children.at(i) == child) {
-                    recCheckSize(root);
+                    //recCheckSize(root);
                     return node;
                 } else
                 if (newNode->children.at(i) == child) {
-                    recCheckSize(root);
+                    //recCheckSize(root);
                     return newNode;
                 }
             }
         }
-        recCheckSize(root);
+        //recCheckSize(root);
         return nullptr;
     }
 
@@ -233,7 +233,7 @@ private:
                 recInsert(node->parent, key, data);
             }
         }
-        recCheckSize(root);
+        //recCheckSize(root);
     }
 
     void recFreeTree(TNode* node) {
@@ -439,7 +439,7 @@ private:
                 bro->children.erase(0);
             }
         }
-        recCheckSize(root);
+        //recCheckSize(root);
         return 0;
     }
 
@@ -497,7 +497,7 @@ private:
 
             root = node;
 
-            recCheckSize(root);
+            //recCheckSize(root);
 
             return node;
         }
@@ -580,7 +580,7 @@ private:
 
         nodeCount -= 1;
         delete bratelnik;
-        recCheckSize(root);
+        //recCheckSize(root);
 
         return node;
     }
@@ -632,7 +632,7 @@ private:
                 node->keys.erase(j);
                 node->data.erase(j);
                 node->keyCount--;
-                recCheckSize(root);
+                //recCheckSize(root);
             } else {    //leaf is not filled enough
                 //looking for keys from brothers
                 int i = 0;
@@ -716,7 +716,7 @@ private:
                 recDelete(nodeBuff, key);
             }
         }
-        recCheckSize(root);
+        //recCheckSize(root);
         return true;
     }
 

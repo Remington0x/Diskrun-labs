@@ -6,18 +6,19 @@
 Тесты состоят из $10^3$, $10^4$ и $10^5$ строк. Все ключи длиной 8 символов.
 
 \begin{alltt}
-    [alext@alext-pc solution]$ ./benchmark < test1k.txt
-    B-tree: 39.656 ms
-    std::map: 1.067 ms
-    [alext@alext-pc solution]$ ./benchmark < test10k.txt
-    B-tree: 2547.392 ms
-    std::map: 14.117 ms
-    [alext@alext-pc solution]$ ./benchmark < test100k.txt
-    B-tree: 446774.381 ms
-    std::map: 368.464 ms
+[alext@alext-pc solution]$ g++ bc.cpp 
+[alext@alext-pc solution]$ ./a.out < test1k.txt 
+B-tree: 2.519 ms
+std::map: 1.135 ms
+[alext@alext-pc solution]$ ./a.out < test10k.txt 
+B-tree: 31.711 ms
+std::map: 11.747 ms
+[alext@alext-pc solution]$ ./a.out < test100k.txt 
+B-tree: 466.771 ms
+std::map: 155.924 ms
 \end{alltt}
 
-{\itshape std::map} оказался гораздо быстрее моего алгоритма. Также очевидно, что сложность моего алгоритма больше чем у {\itshape std::map}. Я не знаю, почему так происходит. В процессе написания лабораторной я тщательно сверялся с описанием максимально эффективных реализаций операций, но это не помогло качественно реализовать структуру B-дерева.
+{\itshape std::map} оказался примерно в 3 раза быстрее моего алгоритма. Но, тем не менее, мне удалось реализовать структуру В-дерева так, чтобы сложность была на том уровне, на котором она должна быть, и как, мы видим, время работы моего алгоритма всегда в 3 раза больше, чем у {\itshape std::map}, а значит их сложности совпадают.
 
 \pagebreak
 

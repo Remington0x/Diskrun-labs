@@ -51,8 +51,12 @@ struct TString {
         string[0] = '\0';
     }
     TString(const TString& s) {
-        for (int i = 0; i < 256; ++i) {
+        int i;
+        for (i = 0; (s.string[i] != '\0') && (i < MAX_LENGTH); ++i) {
             string[i] = s.string[i];
+        }
+        if (i != MAX_LENGTH) {
+            string[i] = '\0';
         }
     }
     ~TString() {}
