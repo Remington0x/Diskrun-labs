@@ -1,6 +1,10 @@
 #ifndef TSTRING_HPP
 #define TSTRING_HPP
 
+#include <cstdlib>
+
+const int MAX_LENGTH = 256;
+
 void toLowerCase(char* a) {
     int i = 0;
     while (a[i] != '\0') {
@@ -42,6 +46,7 @@ bool stringCompare(const char* a, const char* b) {
 }
 
 struct TString {
+    char string[MAX_LENGTH];
     TString() {
         string[0] = '\0';
     }
@@ -51,7 +56,11 @@ struct TString {
         }
     }
     ~TString() {}
-    char string[256];
+    void nullStr() {
+        for (int i = 0; i < MAX_LENGTH; ++i) {
+            string[i] = '\0';
+        }
+    }
     TString& operator=(const TString& b);
 };
 
@@ -59,7 +68,7 @@ struct TString {
 //works with lower-cased chars
 bool operator<(const TString& a, const TString& b) {
     int i = 0;
-    while (a.string[i] != '\0' && b.string[i] != '\0') {
+    while (a.string[i] != '\0' && b.string[i] != '\0' && i < MAX_LENGTH) {
         if (a.string[i] < b.string[i]) {
             return true;
         } else
@@ -71,14 +80,13 @@ bool operator<(const TString& a, const TString& b) {
     //at this point one or two strings have ended
     if (a.string[i] == '\0' && b.string[i] != '\0') {
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 bool operator>(const TString& a, const TString& b) {
     int i = 0;
-    while (a.string[i] != '\0' && b.string[i] != '\0') {
+    while (a.string[i] != '\0' && b.string[i] != '\0' && i < MAX_LENGTH) {
         if (a.string[i] > b.string[i]) {
             return true;
         } else
@@ -90,14 +98,13 @@ bool operator>(const TString& a, const TString& b) {
     //at this point one or two strings have ended
     if (a.string[i] != '\0' && b.string[i] == '\0') {
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 bool operator==(const TString& a, const TString& b) {
     int i = 0;
-    while (a.string[i] != '\0' && b.string[i] != '\0') {
+    while (a.string[i] != '\0' && b.string[i] != '\0' && i < MAX_LENGTH) {
         if (a.string[i] != b.string[i]) {
             return false;
         }
@@ -106,9 +113,8 @@ bool operator==(const TString& a, const TString& b) {
     //at this point one or two strings have ended
     if (a.string[i] == '\0' && b.string[i] == '\0') {
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 std::ostream& operator<<(std::ostream& out, const TString& a) {

@@ -222,17 +222,40 @@ public:
 
 \section{Консоль}
 \begin{alltt}
-a.kukhticev$ gcc -pedantic -Wall -std=c99 -Werror -Wno-sign-compare -lm da10.c -o da10 --some_long_argument=true
-a.kukhticev$ cat test1 
-87	a
-13	b
-89	c
-13	d
-a.kukhticev$ ./da10 < test1 
-13	b
-13	d
-87	a
-89	c
+	[alext@alext-pc solution]$ make -B
+	g++ -std=c++14 -pedantic -g -Wall -Wextra -Wno-unused-variable lab2-nocomms.cpp -o solution
+	[alext@alext-pc solution]$ cat test.txt 
+	+ Alpha 1239871
+	! Save tree.b
+	- Alpha
+	Alpha
+	+ Bravo 28293024
+	+ Charlie 308094108
+	Delta
+	! Load tree.b
+	+ Charlie 308094108
+	+ Bravo 28293024
+	Alpha
+	Charlie
+	Echo
+	Bravo
+	Foxtrot
+	[alext@alext-pc solution]$ ./solution < test.txt 
+	OK
+	OK
+	OK
+	NoSuchWord
+	OK
+	OK
+	NoSuchWord
+	OK
+	OK
+	OK
+	OK: 1239871
+	OK: 308094108
+	NoSuchWord
+	OK: 28293024
+	NoSuchWord
 \end{alltt}
 \pagebreak
 

@@ -1,0 +1,15 @@
++ Alpha 1239871
+! Save tree.b
+- Alpha
+Alpha
++ Bravo 28293024
++ Charlie 308094108
+Delta
+! Load tree.b
++ Charlie 308094108
++ Bravo 28293024
+Alpha
+Charlie
+Echo
+Bravo
+Foxtrot
