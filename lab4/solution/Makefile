@@ -5,4 +5,4 @@ solution:
 	g++ $(FLAGS) trie.cpp main.cpp -o solution
 
 clean:
-	rm -rm *.o solution
+	rm -rf *.o solution
