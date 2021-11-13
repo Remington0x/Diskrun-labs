@@ -74,7 +74,55 @@ void TTrie::CreateLinks() {
                     child->out.insert(child->out.end(), child->linkFail->out.begin(), child->linkFail->out.end());
                     break;
                 }
+
+                if (parentFail == root) {
+                    child->linkFail = root;
+                    break;
+                } else {
+                    parentFail = parentFail->linkFail;
+                }
             }
+        }
+    }
+}
+
+void TTrie::Search(const std::vector<unsigned long> &text, const int &patternLen, std::vector<std::pair<int, int>> &answer) {
+    int textLen = text.size();
+    std::vector<int> entry(textLen, 0);
+    TTrieNode* curNode = root;
+    std::map<unsigned long, TTrieNode*>::iterator existingNode;
+    int i;
+
+    for (i = 0; i < textLen; ++i) {
+        existingNode = curNode->to.find(text[i]);
+
+        while (existingNode == curNode->to.end()) {
+            curNode = curNode->linkFail;
+            existingNode = curNode->to.find(text[i]);
+            if (curNode == curNode->linkFail) {
+                break;
+            }
+        }
+
+        if (existingNode != curNode->to.end()) {
+            curNode = existingNode->second;
+
+            if (!curNode->out.empty()) {
+                std::vector<int>::iterator iter;
+                for (iter = curNode->out.begin(); iter != curNode->out.end(); ++iter) {
+                    int patternId = i - lensPatterns[*iter] - *iter + 1;
+                    if (patternId < 0) {
+                        continue;
+                    }
+                    entry[patternId]++;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < textLen; ++i) {
+        if ((entry[i] == woJoker) && (i + patternLen <= textLen)) {
+            std::cout << answer[i].first << ", " << answer[i].second << std::endl;
         }
     }
 }

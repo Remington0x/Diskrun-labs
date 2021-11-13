@@ -24,9 +24,9 @@ private:
 class TTrie {
 public:
     TTrie();
-    ~TTrie();
     void Create(const std::vector<std::string> &);
     void Search(const std::vector<unsigned long> &, const int &, std::vector<std::pair<int, int>> &);
+    ~TTrie() {};
 private:
     TTrieNode *root;
     std::vector<int> lensPatterns;
