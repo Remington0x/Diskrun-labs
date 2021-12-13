@@ -10,7 +10,7 @@ class TSuffTree {
 public:
     TSuffTree() {
         root = new TNode();
-        endPos = std::make_shared<int>(0);
+        endPos = std::make_shared<unsigned int>(0);
     }
 
     ~TSuffTree() {
@@ -23,13 +23,13 @@ private:
     struct TNode {
         bool isLeaf;
         int l;
-        std::shared_ptr<int> r;
+        std::shared_ptr<unsigned int> r;
         std::map<char, TNode*> to;
     };
 
     TNode* root;
     std::string string;
-    std::shared_ptr<int> endPos;
+    std::shared_ptr<unsigned int> endPos;
 
     void RecDelete(TNode*);
     void RecPrint(TNode*, int);
@@ -60,7 +60,7 @@ void TSuffTree::RecPrint(TNode* node, int tab) {
         for (int i = 0; i < tab; ++i) {
             std::cout << '\t';
         }
-        for (int i = node->l; i <= *node->r; ++i) {
+        for (unsigned int i = node->l; i <= *node->r; ++i) {
             std::cout << string[i];
         }
         std::cout << std::endl;
