@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 #include <string>
 #include <memory>
 
@@ -38,12 +39,22 @@ private:
 void TSuffTree::Fill(std::string s) {
     string = s;
     TNode* curNode = root;
+    char curEdge;
+    int curLength;
+    int newSuffCount = 1;
+
     for (*endPos = 0; *endPos < s.length(); ++(*endPos)) {
         if (curNode->to.find(s[*endPos]) == curNode->to.end()) {
+            newSuffCount = 1;
             TNode* newNode = new TNode();
             newNode->l = *endPos;
             newNode->r = endPos;
             curNode->to[s[*endPos]] = newNode;
+        } else {
+            curNode = root;
+            curEdge = s[*endPos];
+            curLength = 1;
+            ++newSuffCount;
         }
     }
 }
