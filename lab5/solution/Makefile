@@ -1,4 +1,4 @@
-FLAGS = -std=c++14 -pedantic -g -Wall -Wextra -Wno-unused-variable
+FLAGS = -std=c++20 -pedantic -g -Wall -Wextra -Wno-unused-variable
 all: solution
 
 solution:
