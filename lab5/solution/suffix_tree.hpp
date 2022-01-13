@@ -27,8 +27,6 @@ public:
     void Find(const char, const char);
     int RecMarker(const char, const char, const int, const int, int &, std::vector<int> &);
     void RecCatchStrings(const int, const int, const int, const std::string, std::vector<int> &, std::vector<std::string> &);
-    std::string LexMinString(const size_t & n);
-    std::string LexMinString(const int id, const size_t & n);
 };
 
 TSuffixTree::TSuffixTree(const std::string & s) : DataString(s), Data(s.size() * 2), SuffixPtr(s.size() * 2), PathSize(s.size() * 2) {
@@ -165,6 +163,43 @@ int StringComparison(std::string & str1, std::string & str2) {
     return 0;
 }
 
+void MyInsert(std::vector<std::string> & ans, std::string str, int pos) {
+    ans.insert(ans.end(), ans.back());
+    size_t i;
+    for (i = ans.size() - 2; i > (size_t)pos; --i) {
+        ans[i] = ans.at(i - 1);
+    }
+    ans[i] = str;
+    return;
+}
+
+void MyErase(std::vector<std::string> & ans, int pos) {
+    for (size_t i = (size_t)pos; i < ans.size() - 2; ++i) {
+        ans[i] = ans.at(i + 1);
+    }
+    ans.erase(ans.end());
+    return;
+}
+
+void MySort(std::vector<std::string> & ans, int l, int r) {
+    if (r - l + 1 <= 1) {
+        return;
+    }
+    int basePos = l;
+    std::string base = ans[l];
+    for (int i = l + 1; i <= r; ++i) {
+        if (StringComparison(ans[i], base) == -1) {
+            std::string buff = ans[i];
+            MyErase(ans, i);
+            MyInsert(ans, buff, i);
+            ++basePos;
+        }
+    }
+    MySort(ans, l, basePos);
+    MySort(ans, basePos + 1, r);
+    return;
+}
+
 void TSuffixTree::Find(const char SENTINEL1, const char SENTINEL2) {
     int maxDepth = 0;
     std::vector<int> ids;
@@ -174,7 +209,8 @@ void TSuffixTree::Find(const char SENTINEL1, const char SENTINEL2) {
     if (maxDepth > 0) {
         std::vector<std::string> answers;
         RecCatchStrings(maxDepth, 0, 0, "", ids, answers);
-        std::sort(answers.begin(), answers.end(), StringComparison);
+        //std::sort(answers.begin(), answers.end(), StringComparison);
+        MySort(answers, 0, answers.size() - 1);
         for (size_t i = 0; i < answers.size(); ++i) {
             std::cout << answers.at(i) << "\n";
         }
@@ -265,26 +301,6 @@ int TSuffixTree::RecMarker(const char SENTINEL1, const char SENTINEL2, const int
     std::cout << isFirst << isSecond << std::endl;
     throw std::logic_error("Control reaches this somehow");
     return -2;
-}
-
-std::string TSuffixTree::LexMinString(const size_t & n) {
-    return LexMinString(0, n);
-}
-
-std::string TSuffixTree::LexMinString(const int id, const size_t & n) {
-    char lexMinId = 0;
-    for (size_t i = 0; i < Data[id].size(); ++i) {
-        if (DataString[Data[id][i].Left] < DataString[Data[id][lexMinId].Left]) {
-            lexMinId = i;
-        }
-    }
-    size_t curEdgeLen = *Data[id][lexMinId].Right - Data[id][lexMinId].Left;
-    if (n <= curEdgeLen) {
-        return DataString.substr(Data[id][lexMinId].Left, n);
-    } else {
-        std::string res = DataString.substr(Data[id][lexMinId].Left, curEdgeLen);
-        return res + LexMinString(Data[id][lexMinId].IdTo, n - curEdgeLen);
-    }
 }
 
 #endif /* SUFFIX_TREE_HPP */
