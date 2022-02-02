@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <chrono>
+
+using duration_t = std::chrono::microseconds;
+const std::string DURATION_SUFFIX = "us";
 
 class TSuffixTree {
 private:
@@ -25,8 +29,8 @@ public:
     TSuffixTree(const std::string & s);
     void Print();
     void Find(const char, const char);
-    int RecMarker(const char, const char, const int, const int, int &, std::vector<int> &);
-    void RecCatchStrings(const int, const int, const int, const std::string, std::vector<int> &, std::vector<std::string> &);
+    int RecMarker(const int, const int, const int, const int, int &, std::vector<int> &);
+    void RecCatchStrings(const int, const int, const int, const int, std::vector<int> &, std::vector<std::string> &);
 };
 
 TSuffixTree::TSuffixTree(const std::string & s) : DataString(s), Data(s.size() * 2), SuffixPtr(s.size() * 2), PathSize(s.size() * 2) {
@@ -133,9 +137,7 @@ TSuffixTree::TSuffixTree(const std::string & s) : DataString(s), Data(s.size() *
         }
     }
 }
-//snachala razmechaem vse vershiny
-//kidaem v massiv
-//potom hz
+
 
 void TSuffixTree::Print() {
     for (long unsigned int i = 0; i < Data.size(); ++i) {
@@ -153,86 +155,103 @@ void TSuffixTree::Print() {
 int StringComparison(std::string & str1, std::string & str2) {
     size_t minSize = std::min(str1.size(), str2.size());
     for (size_t i = 0; i < minSize; ++i) {
-        if (str1[i] < str2[i]) {
+        if (str1.at(i) < str2.at(i)) {
             return -1;
         } else 
-        if (str1[i] > str2[i]) {
+        if (str1.at(i) > str2.at(i)) {
             return 1;
         }
     }
     return 0;
 }
 
-void MyInsert(std::vector<std::string> & ans, std::string str, int pos) {
-    ans.insert(ans.end(), ans.back());
-    size_t i;
-    for (i = ans.size() - 2; i > (size_t)pos; --i) {
-        ans[i] = ans.at(i - 1);
+void MyRemove(std::vector<std::string> & vec, int pos) {
+    for (size_t i = pos; i < vec.size() - 1; ++i) {
+        vec.at(i) = vec.at(i + 1);
     }
-    ans[i] = str;
-    return;
 }
 
-void MyErase(std::vector<std::string> & ans, int pos) {
-    for (size_t i = (size_t)pos; i < ans.size() - 2; ++i) {
-        ans[i] = ans.at(i + 1);
-    }
-    ans.erase(ans.end());
-    return;
-}
-
-void MySort(std::vector<std::string> & ans, int l, int r) {
-    if (r - l + 1 <= 1) {
-        return;
-    }
-    int basePos = l;
-    std::string base = ans[l];
-    for (int i = l + 1; i <= r; ++i) {
-        if (StringComparison(ans[i], base) == -1) {
-            std::string buff = ans[i];
-            MyErase(ans, i);
-            MyInsert(ans, buff, i);
-            ++basePos;
+void RemoveDups(std::vector<std::string> & vec) {
+    for (size_t i = 0; i < vec.size() - 1; ++i) {
+        if (vec.at(i) == vec.at(i + 1)) {
+            MyRemove(vec, i + 1);
+            vec.resize(vec.size() - 1);
         }
     }
-    MySort(ans, l, basePos);
-    MySort(ans, basePos + 1, r);
+}
+
+void MySwap(std::string & a, std::string & b) {
+    std::string c = a;
+    a = b;
+    b = c;
+}
+
+void MySort(std::vector<std::string> & ans) {
+    if (ans.size() == 1) {
+        return;
+    }
+    for (size_t i = 0; i < ans.size(); ++i) {
+        for (size_t j = 0; j < ans.size() - i - 1; ++j) {
+            if (StringComparison(ans.at(j), ans.at(j + 1)) == 1) {
+                MySwap(ans.at(j), ans.at(j + 1));
+            }
+        }
+    }
     return;
 }
 
 void TSuffixTree::Find(const char SENTINEL1, const char SENTINEL2) {
     int maxDepth = 0;
     std::vector<int> ids;
-    RecMarker(SENTINEL1, SENTINEL2, 0, 0, maxDepth, ids);
+    const int sent1Pos = DataString.find(SENTINEL1);
+    const int sent2Pos = DataString.find(SENTINEL2);
+
+    // std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
+    RecMarker(sent1Pos, sent2Pos, 0, 0, maxDepth, ids);
+    // auto end_ts = std::chrono::system_clock::now();
+    // uint64_t marker_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
     std::cout << maxDepth << std::endl;
     
     if (maxDepth > 0) {
         std::vector<std::string> answers;
-        RecCatchStrings(maxDepth, 0, 0, "", ids, answers);
+        // std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
+        RecCatchStrings(maxDepth, 0, 0, 0, ids, answers);
+        // auto end_ts = std::chrono::system_clock::now();
+        // uint64_t string_catcher_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
+
+        // std::cout << "Marker time is " << marker_ts << DURATION_SUFFIX << std::endl;
+        // std::cout << "Catcher time is " << string_catcher_ts << DURATION_SUFFIX << std::endl;
         //std::sort(answers.begin(), answers.end(), StringComparison);
-        MySort(answers, 0, answers.size() - 1);
+        MySort(answers);
+        RemoveDups(answers);
         for (size_t i = 0; i < answers.size(); ++i) {
             std::cout << answers.at(i) << "\n";
         }
     }
 }
 
-void TSuffixTree::RecCatchStrings(const int maxDepth, const int depth, const int id, const std::string str, std::vector<int> & ids, std::vector<std::string> & answers) {
+void TSuffixTree::RecCatchStrings(const int maxDepth, const int depth, const int id, int l, std::vector<int> & ids, std::vector<std::string> & answers) {
     if (depth == maxDepth && id == ids.at(0)) {
         ids.erase(ids.begin());
-        answers.push_back(str);
+        answers.push_back(DataString.substr(l, depth));
         return;
     }
 
-    for (size_t i = 0; i < Data[id].size(); ++i) {
-        std::string newStr = str;
-        for (int j = Data[id][i].Left; j < *Data[id][i].Right; ++j) {
-            newStr += DataString[j];
+    if (id == 0) {
+        for (size_t i = 0; i < Data[id].size(); ++i) {
+            RecCatchStrings(maxDepth, depth + *Data[id][i].Right - Data[id][i].Left, Data[id][i].IdTo, Data[id][i].Left, ids, answers);
+            
+            if (ids.empty()) {
+                return;
+            }
         }
-        RecCatchStrings(maxDepth, depth + *Data[id][i].Right - Data[id][i].Left, Data[id][i].IdTo, newStr, ids, answers);
-        
-        if (ids.empty()) {
-            return;
+    } else {
+        for (size_t i = 0; i < Data[id].size(); ++i) {
+            RecCatchStrings(maxDepth, depth + *Data[id][i].Right - Data[id][i].Left, Data[id][i].IdTo, l, ids, answers);
+            
+            if (ids.empty()) {
+                return;
+            }
         }
     }
 
@@ -242,14 +261,14 @@ void TSuffixTree::RecCatchStrings(const int maxDepth, const int depth, const int
 //0 if first
 //1 if second
 //2 if both
-int TSuffixTree::RecMarker(const char SENTINEL1, const char SENTINEL2, const int depth, const int id, int & maxDepth, std::vector<int> & answers) {
+int TSuffixTree::RecMarker(const int sent1Pos, const int sent2Pos, const int depth, const int id, int & maxDepth, std::vector<int> & answers) {
     bool isFirst = false;
     bool isSecond = false;
     int mark;
     for (size_t i = 0; i < Data[id].size(); ++i) {
         //std::cout << "Data[id].size() = " << Data[id].size() << std::endl;
         //std::cout << "Going to ID " << Data[id][i].IdTo << "\n";
-        mark = RecMarker(SENTINEL1, SENTINEL2, depth + *Data[id][i].Right - Data[id][i].Left, Data[id][i].IdTo, maxDepth, answers);
+        mark = RecMarker(sent1Pos, sent2Pos, depth + *Data[id][i].Right - Data[id][i].Left, Data[id][i].IdTo, maxDepth, answers);
 
         
         if (mark == 0) {
@@ -264,15 +283,11 @@ int TSuffixTree::RecMarker(const char SENTINEL1, const char SENTINEL2, const int
             //break;
         }
 
-        for (int j = Data[id][i].Left; j < *Data[id][i].Right; ++j) {
-            if (DataString[j] == SENTINEL1) {
-                isFirst = true;
-                break;
-            } else 
-            if (DataString[j] == SENTINEL2) {
-                isSecond = true;
-                break;
-            }
+        if (Data[id][i].Left <= sent1Pos && *Data[id][i].Right >= sent1Pos) {
+            isFirst = true;
+        } else 
+        if (Data[id][i].Left <= sent2Pos && *Data[id][i].Right >= sent2Pos) {
+            isSecond = true;
         }
     }
     //std::cout << "ID = " << id << " , isFirst = " << isFirst << " isSecond = " << isSecond << std::endl;
