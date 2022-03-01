@@ -1,13 +1,11 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
-
 int main() {
     int n;
-    cin >> n;
-    vector<long long> dp(n + 1, -1);
-    vector<int> op(n + 1);
+    std::cin >> n;
+    std::vector<long long> dp(n + 1, -1);
+    std::vector<int> op(n + 1);
     dp[1] = 0;
 
     for (int i = 1; i < n; ++i) {
