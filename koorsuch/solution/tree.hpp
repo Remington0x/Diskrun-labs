@@ -109,7 +109,7 @@ TNode* TTree::RemNode(double h) {
             //2. 1 child
             //3. 2 children
             if (curNode->Left == nullptr) {     //there is no left child
-                if (curNode->Right == nullptr) {//threre is no children
+                if (curNode->Right == nullptr) {//threre are no children
                     if (curNode == Root) {
                         delete newRoot;
                         return nullptr;
@@ -121,27 +121,54 @@ TNode* TTree::RemNode(double h) {
                         parent->Right = nullptr;
                     }
                 } else {    //there is right child
+                    if (curNode == Root) {
+                        delete newRoot;
+                        newRoot = curNode->Right;
+                    }
                     if (curNewNode == parent->Left) {
-                        parent->Left = curNewNode->Right;
+                        parent->Left = curNode->Right;
                         delete curNewNode;
                     } else {
-                        parent->Right = curNewNode->Right;
+                        parent->Right = curNode->Right;
                         delete curNewNode;
                     }
                 }
             } else {
                 if (curNode->Right == nullptr) {//there is only left child
+                    if (curNode == Root) {
+                        delete newRoot;
+                        newRoot = curNode->Left;
+                    }
                     if (curNewNode == parent->Left) {
-                        parent->Left = curNewNode->Left;
+                        parent->Left = curNode->Left;
                         delete curNewNode;
                     } else {
-                        parent->Right = curNewNode->Left;
+                        parent->Right = curNode->Left;
                         delete curNewNode;
                     }
                 } else {    //there are both children
                     //go to the right
                     //walk through the left subtree copying all the nodes
                     //when the leaf is reached, swap cur and leaf
+                    TNode* buffNode = curNode->Right;
+                    TNode* buffNewNode = new TNode(curNode->Right->Height);
+                    curNewNode->Left = curNode->Left;
+
+                    if (curNode == Root) {
+                        
+
+                        delete newRoot;
+                        newRoot = curNode->Right;
+                    }
+
+                    while (buffNode->Left->Left != nullptr) {
+                        buffNewNode->Right = buffNode->Right;
+                        buffNewNode->Left = new TNode(buffNode->Left->Height);
+                        buffNode = buffNode->Left;
+                        buffNewNode = buffNewNode->Left;
+                    }
+                    //at this point buffNode->left is nullptr
+
                 }
             }
 
