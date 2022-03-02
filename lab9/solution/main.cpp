@@ -1,8 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <chrono>
 
 const int IMAX = std::numeric_limits<int>::max();
+using duration_t = std::chrono::microseconds;
 
 struct TEdge {
     int r;
@@ -28,6 +30,8 @@ int main() {
         vertices[l - 1].push_back(TEdge(r - 1, w));
     }
 
+    std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
+
     //Bellman-Ford algorithm
     std::vector<int> lengths(n, IMAX);
     lengths[start] = 0;
@@ -40,6 +44,11 @@ int main() {
             }
         }
     }
+
+    auto end_ts = std::chrono::system_clock::now();
+    uint64_t b_f_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
+
+    //std::cout << "Bellman-Ford time: " << b_f_ts << "us\n";
     if (lengths[finish] == IMAX) {
         std::cout << "No solution\n";
     } else {
