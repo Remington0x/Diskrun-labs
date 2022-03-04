@@ -26,21 +26,45 @@ struct TNode {
 
 class TTree {
 public:
-    TNode* Root;
-    TTree() {
-        Root = new TNode();
-    }
-    TTree(double h) {
-        Root = new TNode(h);
-    }
+    std::vector<TNode*> Roots;
+    TTree() {}
+    ~TTree() {}
 
+    void PrintTree(int);
     TNode* AddNode(double);
     TNode* RemNode(double);
+
+private:
+    void RecPrintTree(TNode*, int);
 };
 
+void TTree::RecPrintTree(TNode* node, int tab) {
+    if (node->Right != nullptr) {
+        RecPrintTree(node->Right, tab + 1);
+    }
+    for (int i = 0; i < tab; ++i)
+        std::cout << "  ";
+    std::cout << node->Height << std::endl;
+    if (node->Left != nullptr) {
+        RecPrintTree(node->Left, tab + 1);
+    }
+}
+
+void TTree::PrintTree(int rootNum) {
+    RecPrintTree(Roots.at(rootNum), 0);
+}
+
 TNode* TTree::AddNode(double h) {
-    //TNode* newNode = new TNode(h);
-    TNode* newRoot = new TNode(Root->Height);
+    TNode* Root;
+    TNode* newRoot;
+    if (Roots.empty()) {
+        TNode* newRoot = new TNode(h);
+        Roots.push_back(newRoot);
+        return newRoot;
+    } else {
+        Root = Roots.back();
+        newRoot = new TNode(Root->Height);
+    }
     TNode* curNewNode = newRoot;
     TNode* curNode = Root;
     bool flag = true;
@@ -69,10 +93,16 @@ TNode* TTree::AddNode(double h) {
         }
     }
 
+    Roots.push_back(newRoot);
     return newRoot;
 }
 
 TNode* TTree::RemNode(double h) {
+    TNode* Root;
+    if (Roots.empty()) {
+        throw std::logic_error("Attempting to delete from empty tree");
+    }
+    Root = Roots.back();
     TNode* newRoot = new TNode(Root->Height);
     TNode* curNewNode = newRoot;
     TNode* curNode = Root;
@@ -112,70 +142,104 @@ TNode* TTree::RemNode(double h) {
                 if (curNode->Right == nullptr) {//threre are no children
                     if (curNode == Root) {
                         delete newRoot;
-                        return nullptr;
-                    }
-                    delete curNewNode;
-                    if (curNewNode == parent->Left) {
-                        parent->Left = nullptr;
+                        newRoot = nullptr;
                     } else {
-                        parent->Right = nullptr;
+                        delete curNewNode;
+                        if (curNewNode == parent->Left) {
+                            parent->Left = nullptr;
+                        } else {
+                            parent->Right = nullptr;
+                        }
                     }
+                    flag = false;
                 } else {    //there is right child
                     if (curNode == Root) {
                         delete newRoot;
                         newRoot = curNode->Right;
-                    }
-                    if (curNewNode == parent->Left) {
-                        parent->Left = curNode->Right;
-                        delete curNewNode;
                     } else {
-                        parent->Right = curNode->Right;
-                        delete curNewNode;
+                        if (curNewNode == parent->Left) {
+                            parent->Left = curNode->Right;
+                            delete curNewNode;
+                        } else {
+                            parent->Right = curNode->Right;
+                            delete curNewNode;
+                        }
                     }
+                    flag = false;
                 }
             } else {
                 if (curNode->Right == nullptr) {//there is only left child
                     if (curNode == Root) {
                         delete newRoot;
                         newRoot = curNode->Left;
-                    }
-                    if (curNewNode == parent->Left) {
-                        parent->Left = curNode->Left;
-                        delete curNewNode;
                     } else {
-                        parent->Right = curNode->Left;
-                        delete curNewNode;
+                        if (curNewNode == parent->Left) {
+                            parent->Left = curNode->Left;
+                            delete curNewNode;
+                        } else {
+                            parent->Right = curNode->Left;
+                            delete curNewNode;
+                        }
                     }
+                    flag = false;
                 } else {    //there are both children
                     //go to the right
                     //walk through the left subtree copying all the nodes
                     //when the leaf is reached, swap cur and leaf
-                    TNode* buffNode = curNode->Right;
-                    TNode* buffNewNode = new TNode(curNode->Right->Height);
-                    curNewNode->Left = curNode->Left;
+                    TNode* buffNode = curNode->Left;
+                    TNode* buffNewNode = new TNode(curNode->Left->Height);
+                    curNewNode->Left = buffNewNode;
 
                     if (curNode == Root) {
-                        
-
-                        delete newRoot;
-                        newRoot = curNode->Right;
+                        if (buffNode->Right == nullptr) {
+                            newRoot->Height = curNode->Left->Height;
+                            newRoot->Right = Root->Right;
+                            newRoot->Left = curNode->Left->Left;
+                            delete buffNewNode;
+                            flag = false;
+                        } else {
+                            newRoot->Left = buffNewNode;
+                            while (buffNode->Right->Right != nullptr) {
+                                buffNewNode->Left = buffNode->Left;
+                                buffNewNode->Right = new TNode(buffNode->Right->Height);
+                                buffNode = buffNode->Right;
+                                buffNewNode = buffNewNode->Right;
+                            }
+                            //at this point buffNode->Right->Right is nullptr
+                            buffNewNode->Left = buffNode->Left;
+                            //buffNewNode->Right is already nullptr
+                            newRoot->Height = buffNode->Right->Height;
+                            //newRoot->left is already set
+                            newRoot->Right = Root->Right;
+                            flag = false;
+                        }
                     }
-
-                    while (buffNode->Left->Left != nullptr) {
-                        buffNewNode->Right = buffNode->Right;
-                        buffNewNode->Left = new TNode(buffNode->Left->Height);
-                        buffNode = buffNode->Left;
-                        buffNewNode = buffNewNode->Left;
+                    
+                    if (buffNode->Right == nullptr) {
+                            curNewNode->Height = buffNode->Height;
+                            curNewNode->Left = buffNode->Left;
+                            curNewNode->Right = nullptr;
+                            delete buffNewNode;
+                            flag = false;
+                    } else {
+                        while (buffNode->Right->Right != nullptr) {
+                            buffNewNode->Left = buffNode->Left;
+                            buffNewNode->Right = new TNode(buffNode->Right->Height);
+                            buffNode = buffNode->Right;
+                            buffNewNode = buffNewNode->Right;
+                        }
+                        //at this point buffNode->Right->Right is nullptr
+                        buffNewNode->Left = buffNode->Left;
+                        curNewNode->Height = buffNode->Right->Height;
+                        curNewNode->Right = curNode->Right;
+                        flag = false;
                     }
-                    //at this point buffNode->left is nullptr
-
                 }
             }
-
         }
     }
+    Roots.push_back(newRoot);
+    return newRoot;
 }
-
-
 
 #endif
