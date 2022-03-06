@@ -1,7 +1,35 @@
 #include "tree.hpp"
 
+struct TStrip {
+    double XRight;
+    TNode* TreeRoot;
+};
+
 int main() {
     TTree* tree = new TTree();
+    std::vector<TStrip> strips;
+
+    int n, m;
+    double l, r, h;
+    double x, y;
+
+     std::cin >> n >> m;
+
+    for (int i = 0; i < n; ++i) {
+        std::cin >> l >> r >> h;
+        //idk im frustrated
+    }
+
+
+
+
+
+
+
+
+
+
+
     char op;
     double buff;
     std::cout << "a -- add key\nd -- delete key\np -- print tree\n";
