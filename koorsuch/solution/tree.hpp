@@ -1,9 +1,6 @@
 #ifndef TREE_HPP
 #define TREE_HPP
 
-/*Получается у нас есть вектор указателей на корни деревьев. 
-
-*/
 
 #include <iostream>
 #include <vector>
@@ -12,10 +9,10 @@ struct TNode {
     TNode* Left;
     TNode* Right;
     double Height;
-    TNode() {
-        Left = nullptr;
-        Right = nullptr;
-    };
+    // TNode() {
+    //     Left = nullptr;
+    //     Right = nullptr;
+    // };
     TNode(double h) {
         Height = h;
         Left = nullptr;
@@ -57,7 +54,7 @@ void TTree::PrintTree(int rootNum) {
 TNode* TTree::AddNode(double h) {
     TNode* Root;
     TNode* newRoot;
-    if (Roots.empty()) {
+    if (Roots.empty() || Roots.back() == nullptr) {
         TNode* newRoot = new TNode(h);
         Roots.push_back(newRoot);
         return newRoot;
