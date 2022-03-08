@@ -2,6 +2,11 @@
 
 #include <algorithm>
 #include <string>
+#include <chrono>
+#include <string>
+
+using duration_t = std::chrono::microseconds;
+const std::string DURATION_PREFIX = "us";
 
 struct TStrip {
     double XLeft;
@@ -84,23 +89,34 @@ int main() {
     std::sort(vec.begin(), vec.end());
 
     //vot ono -- chudo detorozhdeniya
+
+    std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
+
     TNode* newRoot;
     
     while (!vec.empty() || !queue.empty()) {
         if (!queue.empty()) {
             if (vec.empty() || queue.at(0).R < vec.at(0).L) {  //segment queue[0] ends
+
+                unsigned int vsize = tree->Values.size();
+                unsigned int qsize = queue.size();
+
                 newRoot = tree->RemNode(queue.at(0).H);
                 strips.push_back(TStrip(queue.at(0).R, newRoot));
                 queue.erase(queue.begin());
+
             } else 
             if (queue.at(0).R > vec.at(0).L) {  //segment vec[0] starts
                 newRoot = tree->AddNode(vec.at(0).H);
                 strips.push_back(TStrip(vec.at(0).L, newRoot));
                 addToQueue(vec.at(0), queue);
                 vec.erase(vec.begin());
+
             } else {    //queue[0] ends and vec[0] starts
                 tree->RemNode(queue.at(0).H);
+
                 newRoot = tree->AddNode(vec.at(0).H);
+
                 strips.push_back(TStrip(vec.at(0).L, newRoot));
                 queue.erase(queue.begin());
                 addToQueue(vec.at(0), queue);
@@ -108,6 +124,7 @@ int main() {
             }
         } else {    //queue is empty
             newRoot = tree->AddNode(vec.at(0).H);
+
             strips.push_back(TStrip(vec.at(0).L, newRoot));
             addToQueue(vec.at(0), queue);
             vec.erase(vec.begin());
@@ -151,6 +168,10 @@ int main() {
             } else {
                 mid = r - l / 2;
             }
+            if (mid == strips.size()) {
+                flag = false;
+                --mid;
+            }
         }
         
         //2. determine branch of tree
@@ -185,6 +206,11 @@ int main() {
         std::cout << segCount << std::endl;
         }
     }
+
+    auto end_ts = std::chrono::system_clock::now();
+    uint64_t persistent_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
+    
+    std::cout << "Persistent time: " << persistent_ts << DURATION_PREFIX << std::endl;
 
     return 0;
 }

@@ -4,5 +4,11 @@ all: solution
 solution: main.cpp tree.hpp
 	g++ $(FLAGS) main.cpp -o solution
 
+naive: super_naive.cpp
+	g++ $(FLAGS) super_naive.cpp -o naive
+
+gen: gen.cpp
+	g++ $(FLAGS) gen.cpp -o gen
+
 clean:
 	rm -rf *.o solution

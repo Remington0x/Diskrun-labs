@@ -1,5 +1,9 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
+
+using duration_t = std::chrono::microseconds;
+const std::string DURATION_PREFIX = "us";
 
 struct TSegment {
     double l;
@@ -26,6 +30,8 @@ int main() {
         std::cin >> l >> r >> h;
         vec.push_back(TSegment(l, r, h));
     }
+
+    std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
     for (int i = 0; i < m; ++i) {
         std::cin >> x >> y;
         segCount = 0;
@@ -38,6 +44,11 @@ int main() {
         }
         std::cout << "The amount of segments above this point is " << segCount << std::endl;
     }
+
+    auto end_ts = std::chrono::system_clock::now();
+    uint64_t super_naive_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
+    
+    std::cout << "Super naive time: " << super_naive_ts << DURATION_PREFIX << std::endl;
 
     return 0;
 }

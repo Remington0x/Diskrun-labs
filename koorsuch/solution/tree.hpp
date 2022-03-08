@@ -30,10 +30,82 @@ public:
     void PrintTree(int);
     TNode* AddNode(double);
     TNode* RemNode(double);
+    bool Check(double);
+    bool Check(double, TNode*);
+    void FullCheck();
+    void FullCheck(TNode*);
+    std::vector<double> Values;
 
 private:
+    bool RecFind(TNode*, double &);
     void RecPrintTree(TNode*, int);
 };
+
+void VecRem(double h, std::vector<double> & vec) {
+    unsigned int i = 0;
+    while (i < vec.size() && vec.at(i) != h) {
+        ++i;
+    }
+    if (i == vec.size()) {
+        throw std::logic_error("");
+    } else
+    if (i == vec.size() - 1) {
+        vec.pop_back();
+        return;
+    }
+    for (; i < vec.size() - 1; ++i) {
+        vec[i] = vec[i + 1];
+    }
+    vec.pop_back();
+}
+
+void TTree::FullCheck() {
+    int cnt = 0;
+    for (auto val : Values) {
+        if (!Check(val)) {
+            ++cnt;
+        }
+    }
+    if (cnt > 0) {
+        throw std::logic_error("Number of missing heights: " + std::to_string(cnt));
+    }
+}
+
+void TTree::FullCheck(TNode* root) {
+    int cnt = 0;
+    for (auto val : Values) {
+        if (!Check(val, root)) {
+            ++cnt;
+        }
+    }
+    if (cnt > 0) {
+        throw std::logic_error("Number of missing heights: " + std::to_string(cnt));
+    }
+}
+
+bool TTree::RecFind(TNode* node, double & h) {
+    if (node == nullptr) {
+        return false;
+    }
+    bool ret = false;
+    if (h > node->Height) {
+        ret = RecFind(node->Right, h);
+    } else
+    if (h < node->Height) {
+        ret = RecFind(node->Left, h);
+    } else {
+        ret = true;
+    }
+    return ret;
+}
+
+bool TTree::Check(double h) {
+    return RecFind(Roots.back(), h);
+}
+
+bool TTree::Check(double h, TNode* node) {
+    return RecFind(node, h);
+}
 
 void TTree::RecPrintTree(TNode* node, int tab) {
     if (node->Right != nullptr) {
@@ -57,6 +129,11 @@ TNode* TTree::AddNode(double h) {
     if (Roots.empty() || Roots.back() == nullptr) {
         TNode* newRoot = new TNode(h);
         Roots.push_back(newRoot);
+
+        Values.push_back(h);
+
+        FullCheck();
+
         return newRoot;
     } else {
         Root = Roots.back();
@@ -90,7 +167,12 @@ TNode* TTree::AddNode(double h) {
         }
     }
 
+    Values.push_back(h);
+
     Roots.push_back(newRoot);
+
+    FullCheck();
+
     return newRoot;
 }
 
@@ -100,11 +182,16 @@ TNode* TTree::RemNode(double h) {
         throw std::logic_error("Attempting to delete from empty tree");
     }
     Root = Roots.back();
+    if (!Check(h)) {
+        std::cout << "GEGE in RemNode\n";
+    }
     TNode* newRoot = new TNode(Root->Height);
     TNode* curNewNode = newRoot;
     TNode* curNode = Root;
     TNode* parent = newRoot;
     bool flag = true;
+
+    VecRem(h, Values);
 
     while (flag) {
         if (h < curNode->Height) {
@@ -149,6 +236,7 @@ TNode* TTree::RemNode(double h) {
                         }
                     }
                     flag = false;
+                    //FullCheck(newRoot);
                 } else {    //there is right child
                     if (curNode == Root) {
                         delete newRoot;
@@ -163,6 +251,7 @@ TNode* TTree::RemNode(double h) {
                         }
                     }
                     flag = false;
+                    //FullCheck(newRoot);
                 }
             } else {
                 if (curNode->Right == nullptr) {//there is only left child
@@ -179,6 +268,7 @@ TNode* TTree::RemNode(double h) {
                         }
                     }
                     flag = false;
+                    //FullCheck(newRoot);
                 } else {    //there are both children
                     //go to the right
                     //walk through the left subtree copying all the nodes
@@ -194,6 +284,7 @@ TNode* TTree::RemNode(double h) {
                             newRoot->Left = curNode->Left->Left;
                             delete buffNewNode;
                             flag = false;
+                            //FullCheck(newRoot);
                         } else {
                             newRoot->Left = buffNewNode;
                             while (buffNode->Right->Right != nullptr) {
@@ -204,20 +295,21 @@ TNode* TTree::RemNode(double h) {
                             }
                             //at this point buffNode->Right->Right is nullptr
                             buffNewNode->Left = buffNode->Left;
-                            //buffNewNode->Right is already nullptr
+                            buffNewNode->Right = buffNode->Right;
                             newRoot->Height = buffNode->Right->Height;
                             //newRoot->left is already set
                             newRoot->Right = Root->Right;
                             flag = false;
+                            //FullCheck(newRoot);
                         }
-                    }
-                    
+                    } else 
                     if (buffNode->Right == nullptr) {
-                            curNewNode->Height = buffNode->Height;
-                            curNewNode->Left = buffNode->Left;
-                            curNewNode->Right = nullptr;
-                            delete buffNewNode;
-                            flag = false;
+                        curNewNode->Height = buffNode->Height;
+                        curNewNode->Left = buffNode->Left;
+                        curNewNode->Right = curNode->Right;
+                        delete buffNewNode;
+                        flag = false;
+                        //FullCheck(newRoot);
                     } else {
                         while (buffNode->Right->Right != nullptr) {
                             buffNewNode->Left = buffNode->Left;
@@ -230,12 +322,17 @@ TNode* TTree::RemNode(double h) {
                         curNewNode->Height = buffNode->Right->Height;
                         curNewNode->Right = curNode->Right;
                         flag = false;
+                        //FullCheck(newRoot);
                     }
                 }
             }
         }
     }
+
     Roots.push_back(newRoot);
+
+    FullCheck();
+
     return newRoot;
 }
 
