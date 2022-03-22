@@ -88,7 +88,6 @@ int main() {
     }
     std::sort(vec.begin(), vec.end());
 
-    //vot ono -- chudo detorozhdeniya
 
     std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
 

@@ -132,7 +132,7 @@ TNode* TTree::AddNode(double h) {
 
         Values.push_back(h);
 
-        FullCheck();
+        // FullCheck();
 
         return newRoot;
     } else {
@@ -171,7 +171,7 @@ TNode* TTree::AddNode(double h) {
 
     Roots.push_back(newRoot);
 
-    FullCheck();
+    // FullCheck();
 
     return newRoot;
 }
@@ -182,9 +182,9 @@ TNode* TTree::RemNode(double h) {
         throw std::logic_error("Attempting to delete from empty tree");
     }
     Root = Roots.back();
-    if (!Check(h)) {
-        std::cout << "GEGE in RemNode\n";
-    }
+    // if (!Check(h)) {
+    //     std::cout << "GEGE in RemNode\n";
+    // }
     TNode* newRoot = new TNode(Root->Height);
     TNode* curNewNode = newRoot;
     TNode* curNode = Root;
@@ -236,7 +236,7 @@ TNode* TTree::RemNode(double h) {
                         }
                     }
                     flag = false;
-                    //FullCheck(newRoot);
+                    // FullCheck(newRoot);
                 } else {    //there is right child
                     if (curNode == Root) {
                         delete newRoot;
@@ -251,7 +251,7 @@ TNode* TTree::RemNode(double h) {
                         }
                     }
                     flag = false;
-                    //FullCheck(newRoot);
+                    // FullCheck(newRoot);
                 }
             } else {
                 if (curNode->Right == nullptr) {//there is only left child
@@ -268,7 +268,7 @@ TNode* TTree::RemNode(double h) {
                         }
                     }
                     flag = false;
-                    //FullCheck(newRoot);
+                    // FullCheck(newRoot);
                 } else {    //there are both children
                     //go to the right
                     //walk through the left subtree copying all the nodes
@@ -284,7 +284,7 @@ TNode* TTree::RemNode(double h) {
                             newRoot->Left = curNode->Left->Left;
                             delete buffNewNode;
                             flag = false;
-                            //FullCheck(newRoot);
+                            // FullCheck(newRoot);
                         } else {
                             newRoot->Left = buffNewNode;
                             while (buffNode->Right->Right != nullptr) {
@@ -300,7 +300,7 @@ TNode* TTree::RemNode(double h) {
                             //newRoot->left is already set
                             newRoot->Right = Root->Right;
                             flag = false;
-                            //FullCheck(newRoot);
+                            // FullCheck(newRoot);
                         }
                     } else 
                     if (buffNode->Right == nullptr) {
@@ -309,7 +309,7 @@ TNode* TTree::RemNode(double h) {
                         curNewNode->Right = curNode->Right;
                         delete buffNewNode;
                         flag = false;
-                        //FullCheck(newRoot);
+                        // FullCheck(newRoot);
                     } else {
                         while (buffNode->Right->Right != nullptr) {
                             buffNewNode->Left = buffNode->Left;
@@ -319,10 +319,11 @@ TNode* TTree::RemNode(double h) {
                         }
                         //at this point buffNode->Right->Right is nullptr
                         buffNewNode->Left = buffNode->Left;
+                        buffNewNode->Right = buffNode->Right;
                         curNewNode->Height = buffNode->Right->Height;
                         curNewNode->Right = curNode->Right;
                         flag = false;
-                        //FullCheck(newRoot);
+                        // FullCheck(newRoot);
                     }
                 }
             }
@@ -331,7 +332,7 @@ TNode* TTree::RemNode(double h) {
 
     Roots.push_back(newRoot);
 
-    FullCheck();
+    // FullCheck();
 
     return newRoot;
 }
