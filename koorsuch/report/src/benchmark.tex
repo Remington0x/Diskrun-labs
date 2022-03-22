@@ -1,23 +1,38 @@
 \section{Тест производительности}
-{\itshape Тут Вы описываете собственно тест производительности, сравнение Вашей реализации с уже существующими и т.д.}
+Сравнивать производительность буду с супер наивной реализацией, в ней все отрезки складываются в вектор, затем при выполнении запроса происходит обход всего вектора и подсчёт количества отрезков.
+Тесты производительности буду проводить с помощью различных наборов данных:
 
-
-Тест производительности представляет из себя следующее: поиск образцов с помощью суффиксного массива сравнивается с поиском алгоритма КМП, но время на построение суффиксного массива не учитывается. Текст состоит из 1 миллиона букв: а образцов около 200 штук, длина которых может быть от 2 до 100 букв.
+\begin{enumerate}
+    \item 10 отрезков и 10 запросов
+    \item 50 отрезков и 50 запросов
+    \item 200 отрезков и 200 запросов
+    \item 20 отрезков и 200 запросов
+    \item 200 отрезков и 20 запросов
+\end{enumerate}
 
 \begin{alltt}
-Andys-MacBook-Pro:kmp Andy$ g++ main.cpp
-Andys-MacBook-Pro:kmp Andy$ ./a.out <../in.txt >out2.txt
-Andys-MacBook-Pro:kmp Andy$ cat out2.txt | grep "time"
-KMP search time: 1.639993 sec
-Andys-MacBook-Pro:sa Andy$ make
-g++ -pedantic -Wall -Werror -Wno-sign-compare -Wno-long-long -lm -O2 -o lab5
-main.cpp suffix_tree.cpp suffix_array.cpp
-Andys-MacBook-Pro:sa Andy$ ./lab5 <../in.txt >out1.txt
-Andys-MacBook-Pro:sa Andy$ cat out1.txt | grep "time"
-Suffix array build time: 2.179744 sec
-Suffix array search time: 0.003511 sec
+    alext@alext-pc solution]$ ./naive < test10.txt 
+    Super naive time: 37us
+    [alext@alext-pc solution]$ ./solution < test10.txt 
+    Persistent time: 48us
+    alext@alext-pc solution]$ ./naive < test50.txt
+    Super naive time: 155us
+    [alext@alext-pc solution]$ ./solution < test50.txt 
+    Persistent time: 263us
+    alext@alext-pc solution]$ ./naive < test200.txt
+    Super naive time: 155895us
+    [alext@alext-pc solution]$ ./solution < test200.txt
+    Persistent time: 22673us
+    alext@alext-pc solution]$ ./naive < test20-200.txt
+    Super naive time: 2197us
+    [alext@alext-pc solution]$ ./solution < test20-200.txt
+    Persistent time: 547us
+    alext@alext-pc solution]$ ./naive < test200-20.txt
+    Super naive time: 149us
+    alext@alext-pc solution]$ ./solution < test200-20.txt
+    Persistent time: 635us
 \end{alltt}
 
-Как видно, что суффиксный массив выиграл у КМП, так как и т.д.
+Как видим, решение с использованием персистентных структур данных эффективнее на достаточно больших наборах особенно тогда, когда количество запросов превышает количество данных.
 
 \pagebreak
