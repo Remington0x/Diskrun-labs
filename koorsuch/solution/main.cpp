@@ -1,4 +1,6 @@
-#include "tree.hpp"
+//#include "tree.hpp"
+
+#include "tree_sp.hpp"
 
 #include <algorithm>
 #include <string>
@@ -10,8 +12,8 @@ const std::string DURATION_PREFIX = "us";
 
 struct TStrip {
     double XLeft;
-    TNode* TreeRoot;
-    TStrip(double l, TNode* root) {
+    std::shared_ptr<TNode> TreeRoot;
+    TStrip(double l, std::shared_ptr<TNode> root) {
         XLeft = l;
         TreeRoot = root;
     }
@@ -63,15 +65,15 @@ int countSubtree(TNode* node) {
     int counter = 0;
     if (node != nullptr) {
         counter += 1;
-        counter += countSubtree(node->Left);
-        counter += countSubtree(node->Right);
+        counter += countSubtree(node->Left.get());
+        counter += countSubtree(node->Right.get());
     }
     return counter;
 }
 
 
 int main() {
-    TTree* tree = new TTree();
+    auto tree = std::make_shared<TTree>();
     std::vector<TStrip> strips;
     std::vector<TSegment> vec;
     std::vector<TSegment> queue;
@@ -89,9 +91,9 @@ int main() {
     std::sort(vec.begin(), vec.end());
 
 
-    std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
+    // std::chrono::time_point<std::chrono::system_clock> start_ts = std::chrono::system_clock::now();
 
-    TNode* newRoot;
+    std::shared_ptr<TNode> newRoot;
     
     while (!vec.empty() || !queue.empty()) {
         if (!queue.empty()) {
@@ -178,7 +180,7 @@ int main() {
         // tree->PrintTree(mid);
 
         flag = true;
-        TNode* curNode = tree->Roots.at(mid);
+        auto curNode = tree->Roots.at(mid);
         if (curNode == nullptr) {
             std::cout << 0 << std::endl;
             continue;
@@ -187,7 +189,7 @@ int main() {
         while (flag) {
             if (y < curNode->Height) {
                 segCount += 1;
-                segCount += countSubtree(curNode->Right);
+                segCount += countSubtree(curNode->Right.get());
                 if (curNode->Left != nullptr) {
                     curNode = curNode->Left;
                 } else {
@@ -206,10 +208,10 @@ int main() {
         }
     }
 
-    auto end_ts = std::chrono::system_clock::now();
-    uint64_t persistent_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
+    //auto end_ts = std::chrono::system_clock::now();
+    //uint64_t persistent_ts = std::chrono::duration_cast<duration_t>( end_ts - start_ts ).count();
     
-    std::cout << "Persistent time: " << persistent_ts << DURATION_PREFIX << std::endl;
+    //std::cout << "Persistent time: " << persistent_ts << DURATION_PREFIX << std::endl;
 
     return 0;
 }
